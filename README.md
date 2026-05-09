@@ -44,9 +44,10 @@ hermes-agent-workshop/
 │   ├── setup-guide.md
 │   ├── workshop-script.md
 │   ├── basics-llms.md
-│   └── basics-agents.md
-├── scenarios/            # Demo email scripts for live session
-├── tools/                # MCP tool reference
+│   ├── basics-agents.md
+│   ├── use-cases.md
+│   └── tools.md
+├── assets/               # Demo files (images, PDF, audio, slides)
 └── docker-compose.yml
 ```
 

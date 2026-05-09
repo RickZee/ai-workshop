@@ -114,4 +114,4 @@ LLM (OpenRouter) + Tools (MCP)
     └── Send reply → AgentMail MCP → compose + send
 ```
 
-Full diagram in `architecture/EMAIL_ARCHITECTURE.md`.
+Full diagram: see slide `assets/slides/08-hermes-architecture.png`.

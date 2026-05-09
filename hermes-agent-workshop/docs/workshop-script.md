@@ -221,7 +221,7 @@ Show reply arriving. Point to ngrok inspector at http://localhost:4040.
 
 ## 00:40 – 00:55 | Live Demos
 
-> Reference: `scenarios/AGENTMAIL_DEMO_SCENARIOS.md`
+> Reference: `docs/use-cases.md`
 
 Run 4–5 scenarios, ~3 min each. Narrate what Hermes is doing while it processes.
 
@@ -249,12 +249,12 @@ Run 4–5 scenarios, ~3 min each. Narrate what Hermes is doing while it processe
 |----------|--------|
 | "Can I use my own domain?" | Yes — configure custom SMTP in AgentMail settings |
 | "What does this cost in production?" | [AgentMail](https://agentmail.to) free tier: 1k emails/month. [OpenRouter](https://openrouter.ai) free models have rate limits — upgrade to Claude Haiku for ~$1/M tokens |
-| "How do I add more tools?" | Add MCP server entry to Claude config, restart. See `tools/TOOLS_REQUIRED.md` |
-| "Is this secure for real email?" | Read the security notes in `tools/TOOLS_REQUIRED.md` before going to prod. Add allowlists, human-in-the-loop for high-stakes actions |
+| "How do I add more tools?" | Add MCP server entry to Claude config, restart. See `docs/tools.md` |
+| "Is this secure for real email?" | Read the security notes in `docs/tools.md` before going to prod. Add allowlists, human-in-the-loop for high-stakes actions |
 | "Can Hermes remember past emails?" | Not by default — add Filesystem MCP to write conversation history, read it back in the system prompt |
 
 **Next steps for attendees:**
-1. Fork repo → add your own scenario to `scenarios/`
+1. Fork repo → add your own scenario to `docs/use-cases.md`
 2. Swap the free model for Claude Sonnet 4.6 for better accuracy
 3. Add [Tavily](https://app.tavily.com) for live web search — just one API key
 4. Join [AgentMail](https://agentmail.to) Discord for support
