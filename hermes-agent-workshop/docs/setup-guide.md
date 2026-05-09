@@ -8,19 +8,19 @@ Everything needed to run Hermes locally: Docker, email (AgentMail), Telegram, an
 
 | Tool | Version | Check |
 |------|---------|-------|
-| Docker | 24+ | `docker --version` |
-| Docker Compose | 2+ | `docker compose version` |
-| ngrok | any | `ngrok --version` |
+| [Docker](https://docs.docker.com/get-docker/) | 24+ | `docker --version` |
+| [Docker Compose](https://docs.docker.com/compose/install/) | 2+ | `docker compose version` |
+| [ngrok](https://ngrok.com/download) | any | `ngrok --version` |
 
 API keys (all free tier, no credit card):
 
 | Service | Purpose | URL |
 |---------|---------|-----|
-| OpenRouter | LLM inference | [openrouter.ai](https://openrouter.ai) |
-| AgentMail | Email inbox for agent | [agentmail.to](https://agentmail.to) |
-| ngrok | Public webhook tunnel | [ngrok.com](https://ngrok.com) |
-| Tavily | Live web search (optional) | [app.tavily.com](https://app.tavily.com) |
-| Telegram BotFather | Telegram channel (optional) | [@BotFather](https://t.me/BotFather) |
+| [OpenRouter](https://openrouter.ai) | LLM inference | [openrouter.ai](https://openrouter.ai) |
+| [AgentMail](https://agentmail.to) | Email inbox for agent | [agentmail.to](https://agentmail.to) |
+| [ngrok](https://ngrok.com) | Public webhook tunnel | [dashboard.ngrok.com](https://dashboard.ngrok.com) |
+| [Tavily](https://app.tavily.com) | Live web search (optional) | [app.tavily.com](https://app.tavily.com) |
+| [Telegram BotFather](https://t.me/BotFather) | Telegram channel (optional) | [@BotFather](https://t.me/BotFather) |
 
 ---
 

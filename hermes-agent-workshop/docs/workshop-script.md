@@ -63,7 +63,7 @@ Model: "Email sent."
 
 **Why free models for this workshop?**
 
-`nvidia/nemotron-3-super-120b-a12b:free` via OpenRouter: 120B params, supports tool use, free tier, no credit card.
+`nvidia/nemotron-3-super-120b-a12b:free` via [OpenRouter](https://openrouter.ai): 120B params, supports tool use, free tier, no credit card.
 
 | Model | Context | Tool Use | Cost |
 |-------|---------|----------|------|
@@ -212,7 +212,7 @@ Show reply arriving. Point to ngrok inspector at http://localhost:4040.
 
 ### Step 5 — Telegram (optional, if time allows)
 
-1. @BotFather → `/newbot` → copy token
+1. [@BotFather](https://t.me/BotFather) → `/newbot` → copy token
 2. Add `TELEGRAM_BOT_TOKEN=...` to `.env`
 3. `docker compose up -d --force-recreate hermes`
 4. Message bot in Telegram → reply appears
@@ -248,7 +248,7 @@ Run 4–5 scenarios, ~3 min each. Narrate what Hermes is doing while it processe
 | Question | Answer |
 |----------|--------|
 | "Can I use my own domain?" | Yes — configure custom SMTP in AgentMail settings |
-| "What does this cost in production?" | AgentMail free tier: 1k emails/month. OpenRouter free models have rate limits — upgrade to Claude Haiku for ~$1/M tokens |
+| "What does this cost in production?" | [AgentMail](https://agentmail.to) free tier: 1k emails/month. [OpenRouter](https://openrouter.ai) free models have rate limits — upgrade to Claude Haiku for ~$1/M tokens |
 | "How do I add more tools?" | Add MCP server entry to Claude config, restart. See `tools/TOOLS_REQUIRED.md` |
 | "Is this secure for real email?" | Read the security notes in `tools/TOOLS_REQUIRED.md` before going to prod. Add allowlists, human-in-the-loop for high-stakes actions |
 | "Can Hermes remember past emails?" | Not by default — add Filesystem MCP to write conversation history, read it back in the system prompt |
@@ -256,8 +256,8 @@ Run 4–5 scenarios, ~3 min each. Narrate what Hermes is doing while it processe
 **Next steps for attendees:**
 1. Fork repo → add your own scenario to `scenarios/`
 2. Swap the free model for Claude Sonnet 4.6 for better accuracy
-3. Add Tavily for live web search — just one API key
-4. Join AgentMail Discord for support
+3. Add [Tavily](https://app.tavily.com) for live web search — just one API key
+4. Join [AgentMail](https://agentmail.to) Discord for support
 
 **Close:**
 > "The entire agent is in `app/main.py` — under 150 lines. Everything we demoed today is in that file plus a handful of API keys. That's the point: agentic systems are not magic. They're a loop, some tools, and a good system prompt."

@@ -38,7 +38,7 @@ In this workshop: AgentMail (email R/W) + Filesystem MCP (file R/W) + Vision (im
 
 ## MCP — Model Context Protocol
 
-MCP is Anthropic's open standard for connecting tools to AI models. Think of it as USB-C for AI tools.
+MCP is [Anthropic](https://anthropic.com)'s open standard for connecting tools to AI models. Think of it as USB-C for AI tools.
 
 - Standardized interface: any MCP server works with any MCP client
 - Tools described as JSON schemas — model knows how to call them
@@ -60,7 +60,7 @@ That's all you need to give Hermes email superpowers.
 
 ## AgentMail
 
-AgentMail provides an inbox designed for AI agents:
+[AgentMail](https://agentmail.to) provides an inbox designed for AI agents:
 - Webhook on every incoming email
 - API to send, reply, forward
 - Attachment access via URL

@@ -22,7 +22,7 @@
 ```bash
 cd hermes-agent-workshop
 cp .env.example .env
-# Fill in OPENROUTER_API_KEY and AGENTMAIL_API_KEY
+# Fill in all vars
 docker compose up -d
 ```
 
@@ -34,7 +34,7 @@ Dashboard: **http://localhost:9119** · API: **http://localhost:8642**
 - [Workshop Script](hermes-agent-workshop/docs/workshop-script.md) — presenter guide with timing and live commands
 - [Basics: LLMs](hermes-agent-workshop/docs/basics-llms.md)
 - [Basics: Agents](hermes-agent-workshop/docs/basics-agents.md)
-- [Demo Scenarios](hermes-agent-workshop/scenarios/AGENTMAIL_DEMO_SCENARIOS.md)
+- [Use cases](hermes-agent-workshop/docs/use-cases.md) — email, multimedia, SMB, developer tools, personal assistant
 
 ## Repo Structure
 
@@ -52,7 +52,7 @@ hermes-agent-workshop/
 
 ## Prerequisites
 
-- Docker 24+ and Docker Compose 2+
+- [Docker](https://docs.docker.com/get-docker/) 24+ and [Docker Compose](https://docs.docker.com/compose/install/) 2+
 - [OpenRouter](https://openrouter.ai) API key (free tier)
 - [AgentMail](https://agentmail.to) account (free tier)
 - [ngrok](https://ngrok.com) account (free tier, for local webhook exposure)
