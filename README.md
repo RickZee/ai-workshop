@@ -57,3 +57,7 @@ hermes-agent-workshop/
 - [OpenRouter](https://openrouter.ai) API key (free tier)
 - [AgentMail](https://agentmail.to) account (free tier)
 - [ngrok](https://ngrok.com) account (free tier, for local webhook exposure)
+
+## Slides
+
+[AI Workshop 1 - Google Slides](https://docs.google.com/presentation/d/11jxwLDl3uARdpcatefZ31XNugTaNIptlTC6hP9UzXxU/edit?usp=sharing)
