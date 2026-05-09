@@ -36,8 +36,7 @@ hermes-agent-workshop/
 │   ├── setup-guide.md    # Full setup: Docker, email, Telegram, web search
 │   ├── workshop-script.md
 │   ├── basics-llms.md
-│   ├── basics-agents.md
-│   └── ngrok-setup.md
+│   └── basics-agents.md
 ├── scenarios/            # Demo email scripts for live session
 ├── tools/                # MCP tool reference
 ├── setup/                # install.sh helper
