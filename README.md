@@ -20,6 +20,7 @@
 ## Quick Start
 
 ```bash
+cd hermes-agent-workshop
 cp .env.example .env
 # Fill in OPENROUTER_API_KEY and AGENTMAIL_API_KEY
 docker compose up -d
@@ -27,19 +28,25 @@ docker compose up -d
 
 Dashboard: **http://localhost:9119** · API: **http://localhost:8642**
 
+## Docs
+
+- [Setup Guide](hermes-agent-workshop/docs/setup-guide.md) — Docker, email, Telegram, web search
+- [Workshop Script](hermes-agent-workshop/docs/workshop-script.md) — presenter guide with timing and live commands
+- [Basics: LLMs](hermes-agent-workshop/docs/basics-llms.md)
+- [Basics: Agents](hermes-agent-workshop/docs/basics-agents.md)
+- [Demo Scenarios](hermes-agent-workshop/scenarios/AGENTMAIL_DEMO_SCENARIOS.md)
+
 ## Repo Structure
 
 ```
 hermes-agent-workshop/
-├── app/                  # FastAPI agent app
 ├── docs/
-│   ├── setup-guide.md    # Full setup: Docker, email, Telegram, web search
+│   ├── setup-guide.md
 │   ├── workshop-script.md
 │   ├── basics-llms.md
 │   └── basics-agents.md
 ├── scenarios/            # Demo email scripts for live session
 ├── tools/                # MCP tool reference
-├── setup/                # install.sh helper
 └── docker-compose.yml
 ```
 
