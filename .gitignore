@@ -1,0 +1,85 @@
+# --- Secrets & local env (keep committed: **/.env.example) ---
+.env*
+!.env.example
+*.pem
+**/credentials.json
+
+# Claude / Cursor local overrides (often API keys & paths)
+.claude/settings.local.json
+
+# --- Python (scripts, tooling, future app code) ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+
+# --- Test / type / tooling caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Node.js ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+
+# Build / bundler output
+dist/
+build/
+out/
+.next/
+.nuxt/
+.turbo/
+.vercel/
+.output/
+.nitro/
+.cache/
+.parcel-cache/
+.vite/
+.vitepress/cache
+storybook-static/
+coverage/
+
+# TypeScript / tooling
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+
+# Optional: uncomment if you use Yarn Berry with local cache
+# .yarn/*
+# !.yarn/patches
+# !.yarn/plugins
+# !.yarn/releases
+# !.yarn/sdks
+# !.yarn/versions
+
+# --- OS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# --- Editors / IDEs ---
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Logs & temp ---
+*.log
+/tmp/
+**/tmp/
+
+# --- Hermes workshop runtime (often created locally) ---
+hermes-agent-workshop/data/
+hermes-agent-workshop/assets/
