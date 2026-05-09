@@ -1,6 +1,10 @@
-# AgentMail Demo Scenarios
+# Use Cases
 
-Run these during the 00:40–00:55 segment. Each takes ~3 minutes: send email, narrate what Hermes is doing, show the response.
+Each scenario runs on **Email** or **Telegram** — chosen based on what fits the interaction style:
+- **Email** — attachments, formal drafts, long content, async
+- **Telegram** — quick queries, real-time alerts, back-and-forth, mobile-first
+
+Scenarios without a channel label use Email.
 
 ---
 
@@ -70,17 +74,15 @@ Body: I recorded a quick note. Can you transcribe and summarize it?
 
 ### 4. Screenshot Debugging
 
-**Setup:** Attach `assets/error-screenshot.png` (a browser error or console log).
+**Channel:** Telegram
 
-**Send:**
+**Send in Telegram:**
 ```
-To: hermes@yourdomain.agentmail.to
-Subject: Getting this error
-Body: My app is throwing this error. What's wrong and how do I fix it?
-[Attach: error-screenshot.png]
+My app is throwing this error. What's wrong and how do I fix it?
+[attach screenshot of error or console log]
 ```
 
-**Expected reply:** Error diagnosis + step-by-step fix.
+**Expected reply:** Error diagnosis + step-by-step fix. Faster than email for back-and-forth debugging.
 
 ---
 
@@ -228,22 +230,19 @@ We need these parts by the 15th. What should I say to them?
 
 ### 14. Error Triage
 
-**Send:**
+**Channel:** Telegram
+
+**Send in Telegram:**
 ```
-To: hermes@yourdomain.agentmail.to
-Subject: Production error — needs investigation
-Body: Getting this in our logs since the last deploy:
+Getting this since last deploy — what's wrong and how do I fix it?
 
 TypeError: Cannot read properties of undefined (reading 'userId')
     at authMiddleware (src/middleware/auth.js:42)
     at Layer.handle [as handle_request] (express/lib/router/layer.js:95)
-
-Stack trace attached. What's wrong and what's the fix?
-[Attach: error-screenshot.png]
 ```
 
 **What Hermes does:**
-1. Reads stack trace + screenshot
+1. Reads stack trace
 2. Identifies root cause: undefined object access before null check
 3. Replies with diagnosis, specific line fix, and suggested defensive pattern
 
@@ -269,13 +268,13 @@ Changes: removed jsonwebtoken dependency, added express-session, updated all aut
 
 ### 16. Deploy Notification Digest
 
-**Send:**
-```
-To: hermes@yourdomain.agentmail.to
-Subject: Deploy log — summarize for standup
-Body: Here's our CI/CD output from today. Please summarize what shipped, what failed, and any action items.
+**Channel:** Telegram
 
-[paste or attach a deploy log with 3–4 builds: 2 green, 1 failed, 1 rolled back]
+**Send in Telegram:**
+```
+Here's today's CI/CD output. Summarize what shipped, what failed, and any action items.
+
+[paste deploy log — 3–4 builds: 2 green, 1 failed, 1 rolled back]
 ```
 
 **What Hermes does:**
@@ -309,22 +308,20 @@ We're on lodash 4.17.4. How urgent is this and what do we do?
 
 ### 18. On-Call Incident Summary
 
-**Send:**
+**Channel:** Telegram
+
+**Send in Telegram:**
 ```
-To: hermes@yourdomain.agentmail.to
-Subject: Incident report — last night's outage
-Body: We had a 47-minute outage last night. Here's the timeline:
+Write a post-mortem summary and suggest 3 action items:
 
 02:14 — alert fired, p99 latency > 10s
 02:19 — on-call acknowledged
 02:31 — identified DB connection pool exhaustion
 02:41 — scaled pool size from 10 to 50
 03:01 — traffic normalized
-
-Can you write a post-mortem summary and suggest 3 action items?
 ```
 
-**Expected:** Executive summary (2–3 sentences), root cause, timeline recap, 3 concrete action items (e.g. add pool exhaustion alert, automate scaling, add load test to CI).
+**Expected:** Executive summary (2–3 sentences), root cause, timeline recap, 3 concrete action items (e.g. add pool exhaustion alert, automate scaling, add load test to CI). Telegram is ideal here — on-call engineers have phones, not laptops.
 
 ---
 
@@ -332,40 +329,28 @@ Can you write a post-mortem summary and suggest 3 action items?
 
 ### 19. Newsletter Digest
 
-**Send:**
-```
-To: hermes@yourdomain.agentmail.to
-Subject: Morning digest
-Body: Here are 5 newsletters I received this morning. Please summarize each in 2 sentences and flag anything I should actually read in full.
+**Channel:** Telegram
 
-[paste newsletter text or forward multiple emails as body]
+**Send in Telegram:**
+```
+Summarize these newsletters in 2 sentences each and flag anything worth reading in full.
+
+[paste newsletter text]
 ```
 
 **Expected:** Numbered list, 2-sentence summary per newsletter, 1–2 flagged as "worth reading" with reason.
 
 ---
 
-### 20. Bill & Subscription Reminder
+### 20. Bill & Subscription Audit
 
-**Send:**
+**Channel:** Telegram
+
+**Send in Telegram:**
 ```
-To: hermes@yourdomain.agentmail.to
-Subject: Help me audit my subscriptions
-Body: Here's a list of recurring charges from my bank statement this month:
+I want to cut $100/month. Which of these should I cancel?
 
-Netflix $15.99
-Spotify $9.99
-Adobe CC $54.99
-Notion $16
-Linear $18
-Figma $45
-Loom $12.50
-GitHub $21
-AWS $134.22
-Heroku $25
-Vercel $20
-
-I want to cut $100/month. Which should I consider cancelling?
+Netflix $15.99, Spotify $9.99, Adobe CC $54.99, Notion $16, Linear $18, Figma $45, Loom $12.50, GitHub $21, AWS $134.22, Heroku $25, Vercel $20
 ```
 
 **Expected:** Categorized list (essential vs. optional), specific cancellation candidates with reasoning, estimated savings.
@@ -400,19 +385,17 @@ Body: I need to tell a freelancer we're not continuing their contract. They've b
 
 ### 23. Weekly Review Summarizer
 
-**Send:**
+**Channel:** Telegram
+
+**Send in Telegram:**
 ```
-To: hermes@yourdomain.agentmail.to
-Subject: Weekly review — help me reflect
-Body: Here's everything I worked on this week:
+What were my wins, where did I lose time, and what should I prioritize next week?
 
 Mon: finished auth refactor, 3 PR reviews, team sync
 Tue: debugging session (6h on payment bug), 1:1 with manager
 Wed: payment bug fixed and deployed, wrote post-mortem
 Thu: started new feature (user notifications), design review
 Fri: half day, wrapped up notification spike, weekly retro
-
-What were my wins, where did I lose time, and what should I prioritize next week?
 ```
 
 **Expected:** 3 wins, 1–2 time sinks with observation, 3 prioritized suggestions for next week.
