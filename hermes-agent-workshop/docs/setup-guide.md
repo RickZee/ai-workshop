@@ -280,6 +280,21 @@ Hermes searches the web and replies with a sourced summary.
 
 ---
 
+## Data & Persistence
+
+Hermes mounts `~/.hermes` on your host to `/opt/data` inside the container. All persistent data (tickets, invoices, expenses, trip configs) lives there.
+
+| Host path | Container path | Contents |
+|-----------|---------------|---------|
+| `~/.hermes/trips/` | `/opt/data/trips/` | Travel assistant configs |
+| `~/.hermes/tickets/` | `/opt/data/tickets/` | Support tickets |
+| `~/.hermes/invoices/` | `/opt/data/invoices/` | Processed invoices |
+| `~/.hermes/expenses.csv` | `/opt/data/expenses.csv` | Expense log |
+
+Windows path: `%USERPROFILE%\.hermes\`
+
+---
+
 ## Ports Reference
 
 | Port | Purpose |

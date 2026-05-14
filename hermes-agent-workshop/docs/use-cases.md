@@ -50,7 +50,7 @@ Body: Can you extract the key details from this invoice and confirm receipt?
 **What Hermes does:**
 1. Downloads PDF
 2. Extracts: vendor, amount, due date, line items
-3. Saves to `data/invoices/` via local filesystem
+3. Saves to `~/.hermes/invoices/` (host path, mounted into container)
 4. Replies with structured summary
 
 ---
@@ -103,7 +103,7 @@ Body: Please log this receipt to my expense tracker.
 
 **What Hermes does:**
 1. Extracts: vendor, date, amount, category
-2. Appends to `data/expenses.csv`
+2. Appends to `~/.hermes/expenses.csv` (host path, mounted into container)
 3. Confirms with running monthly total
 
 ---
@@ -163,7 +163,7 @@ I tried resetting my password but the email never arrived.
 
 **What Hermes does:**
 1. Classifies: account access issue → high priority
-2. Creates ticket in `data/tickets/`
+2. Creates ticket in `~/.hermes/tickets/` (host path, mounted into container)
 3. Auto-replies with ticket ID + ETA
 4. (Optional) Notifies support channel via Slack API
 
@@ -422,7 +422,7 @@ Hotel: Marriott Downtown, check-in May 20, checkout May 24.
 Remind me about: check-in, weather, local time, what to pack.
 ```
 
-Hermes saves trip to `data/trips/lisbon-2025.json`.
+Hermes saves trip to `~/.hermes/trips/lisbon-2025.json` (host path — mounted into container at `/opt/data/trips/`).
 
 **Scheduled pushes (Hermes messages YOU):**
 
@@ -471,7 +471,7 @@ Reply "dinner" for restaurant picks, "transport" for metro map.
 ```
 
 **What Hermes does:**
-1. Reads trip config from `data/trips/`
+1. Reads trip config from `~/.hermes/trips/` (host path, mounted into container)
 2. Calls Tavily to fetch live flight status, weather, local news
 3. Computes time-to-departure, local timezone offset
 4. Pushes Telegram message at scheduled times

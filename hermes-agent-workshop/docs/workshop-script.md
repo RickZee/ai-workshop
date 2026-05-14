@@ -237,7 +237,7 @@ Run 4–5 scenarios, ~3 min each. Narrate what Hermes is doing while it processe
 | "What does this cost in production?" | [AgentMail](https://agentmail.to) free tier: 1k emails/month. [OpenRouter](https://openrouter.ai) free models have rate limits — upgrade to Claude Haiku for ~$1/M tokens |
 | "How do I add more tools?" | Add env vars to `.env` and `docker-compose.yml`, restart container. See `docs/tools.md` |
 | "Is this secure for real email?" | Read the security notes in `docs/tools.md` before going to prod. Add allowlists, human-in-the-loop for high-stakes actions |
-| "Can Hermes remember past emails?" | Not by default — write conversation history to `data/` and read it back in the system prompt |
+| "Can Hermes remember past emails?" | Not by default — Hermes can persist history to `~/.hermes/` (mounted into the container). Configure via dashboard. |
 
 **Next steps for attendees:**
 1. Fork repo → add your own scenario to `docs/use-cases.md`

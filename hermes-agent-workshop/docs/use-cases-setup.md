@@ -134,6 +134,8 @@ print('Refresh token:', creds.refresh_token)
 
 Needed for: #24.
 
+Hermes exposes a trigger endpoint at `http://localhost:8642/trigger/travel-check`. A cron job (or scheduled task) calls it each morning — Hermes reads trip configs from `~/.hermes/trips/` and pushes Telegram updates.
+
 **Mac/Linux — cron:**
 ```bash
 crontab -e
@@ -169,7 +171,19 @@ crontab -e
 launchctl load ~/Library/LaunchAgents/com.hermes.travel.plist
 ```
 
-**Trip config file** — create `data/trips/my-trip.json`:
+**Trip config file** — create on your host machine at `~/.hermes/trips/my-trip.json` (maps to `/opt/data/trips/` inside the container):
+
+Mac/Linux:
+```bash
+mkdir -p ~/.hermes/trips
+```
+
+Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.hermes\trips"
+```
+
+Then create `~/.hermes/trips/my-trip.json` (Windows: `%USERPROFILE%\.hermes\trips\my-trip.json`):
 ```json
 {
   "destination": "Lisbon",
