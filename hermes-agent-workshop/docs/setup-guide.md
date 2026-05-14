@@ -282,7 +282,17 @@ Hermes searches the web and replies with a sourced summary.
 
 ## Data & Persistence
 
-Hermes mounts `~/.hermes` on your host to `/opt/data` inside the container. All persistent data (tickets, invoices, expenses, trip configs) lives there.
+Docker containers are stateless — anything written inside a container disappears when it restarts. To survive restarts, Hermes writes data to a **mounted volume**: a folder on your host machine that the container reads and writes as if it were local.
+
+```
+Your machine          Container
+~/.hermes/    ←——→   /opt/data/
+```
+
+This means:
+- Files Hermes creates (tickets, invoices, trip configs) are immediately visible on your host at `~/.hermes/`
+- You can drop files in (e.g. a trip config) and Hermes picks them up without a restart
+- Data survives `docker compose down` and `docker compose up`
 
 | Host path | Container path | Contents |
 |-----------|---------------|---------|
@@ -292,6 +302,8 @@ Hermes mounts `~/.hermes` on your host to `/opt/data` inside the container. All 
 | `~/.hermes/expenses.csv` | `/opt/data/expenses.csv` | Expense log |
 
 Windows path: `%USERPROFILE%\.hermes\`
+
+> **Full reset:** `rm -rf ~/.hermes` wipes all persisted data. Use only when you want a clean slate.
 
 ---
 
@@ -327,6 +339,6 @@ Windows path: `%USERPROFILE%\.hermes\`
 **Full reset**
 ```bash
 docker compose down -v
-rm -rf ~/.hermes
+rm -rf ~/.hermes      # wipes all persisted data
 docker compose up -d
 ```

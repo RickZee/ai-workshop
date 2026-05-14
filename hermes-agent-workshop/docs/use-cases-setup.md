@@ -20,7 +20,7 @@ docker compose up -d --force-recreate hermes
 |---|----------|-------------|
 | 1 | Image Analysis | Vision model via `OPENROUTER_MODEL` |
 | 2 | PDF Processing | none |
-| 3 | Voice Message | `OPENAI_API_KEY` for Whisper |
+| 3 | Voice Message | none (OpenRouter handles transcription) |
 | 4 | Screenshot Debugging | Vision model via `OPENROUTER_MODEL` |
 | 5 | Receipt & Expense | Vision model via `OPENROUTER_MODEL` |
 | 6 | Video Summary | `TAVILY_API_KEY` |
@@ -55,17 +55,7 @@ OPENROUTER_MODEL=google/gemini-flash-1.5
 
 Needed for: #3.
 
-Add to `.env`:
-```env
-OPENAI_API_KEY=sk-...
-```
-
-Add to `docker-compose.yml` under `environment`:
-```yaml
-- OPENAI_API_KEY=${OPENAI_API_KEY}
-```
-
-Hermes passes the `.mp3` attachment to OpenAI Whisper API and summarizes the transcript.
+Hermes transcribes audio via OpenRouter — no separate API key needed. The model set in `OPENROUTER_MODEL` handles transcription alongside all other tasks. No extra config required.
 
 ---
 
