@@ -26,12 +26,47 @@ API keys (all free tier, no credit card):
 
 ## Part 1 — Docker Setup
 
+### Step 0: Install Docker
+
+**Mac:**
+```bash
+brew install --cask docker
+open /Applications/Docker.app
+```
+Or download [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/).
+
+**Windows:**
+Download and run [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/). Enable WSL2 backend when prompted.
+
+**Linux (Ubuntu/Debian):**
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+Verify:
+```bash
+docker --version
+docker compose version
+```
+
+---
+
 ### Step 1: Clone and configure
 
+Mac/Linux:
 ```bash
 git clone <repo-url>
 cd hermes-agent-workshop
 cp .env.example .env
+```
+
+Windows:
+```cmd
+git clone <repo-url>
+cd hermes-agent-workshop
+copy .env.example .env
 ```
 
 Edit `.env`:
@@ -109,11 +144,19 @@ AgentMail needs a public HTTPS URL to deliver emails to your local container.
 
 **Install ngrok:**
 
+Mac:
 ```bash
-# Mac
 brew install ngrok/ngrok/ngrok
+```
 
-# Linux
+Windows:
+```cmd
+winget install ngrok.ngrok
+```
+Or download from [ngrok.com/download](https://ngrok.com/download).
+
+Linux (Ubuntu/Debian):
+```bash
 curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
 echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
 sudo apt update && sudo apt install ngrok
