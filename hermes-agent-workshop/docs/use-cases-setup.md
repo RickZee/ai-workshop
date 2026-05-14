@@ -30,7 +30,7 @@ docker compose up -d --force-recreate hermes
 | 11 | Appointment Booking | `GOOGLE_CALENDAR_*` vars |
 | 14–18 | Developer Tools | none (Telegram) |
 | 19–23 | Personal Assistant | none (Telegram) |
-| 24 | Travel Assistant | `TAVILY_API_KEY` + cron scheduler |
+| 24 | Travel Assistant | `TAVILY_API_KEY` + trip config in `~/.hermes/trips/` |
 
 ---
 
@@ -130,46 +130,16 @@ print('Refresh token:', creds.refresh_token)
 
 ---
 
-## Cron Scheduler (Travel Assistant)
+## Scheduled Travel Assistant
 
 Needed for: #24.
 
-Hermes exposes a trigger endpoint at `http://localhost:8642/trigger/travel-check`. A cron job (or scheduled task) calls it each morning — Hermes reads trip configs from `~/.hermes/trips/` and pushes Telegram updates.
+Hermes runs the travel assistant internally — no external cron needed. Once you drop a trip config into `~/.hermes/trips/`, Hermes monitors it on its own schedule and pushes Telegram updates proactively.
 
-**Mac/Linux — cron:**
-```bash
-crontab -e
-# Every morning at 7am
-0 7 * * * curl -s -X POST http://localhost:8642/trigger/travel-check
-```
-
-**Windows — Task Scheduler:**
-1. **Task Scheduler** → **Create Basic Task** → Daily, 07:00
-2. Action: `curl -s -X POST http://localhost:8642/trigger/travel-check`
-
-**Mac — launchd (more reliable than cron):**
-
-`~/Library/LaunchAgents/com.hermes.travel.plist`:
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key><string>com.hermes.travel</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/usr/bin/curl</string><string>-s</string>
-    <string>-X</string><string>POST</string>
-    <string>http://localhost:8642/trigger/travel-check</string>
-  </array>
-  <key>StartCalendarInterval</key>
-  <dict><key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer></dict>
-</dict>
-</plist>
-```
-```bash
-launchctl load ~/Library/LaunchAgents/com.hermes.travel.plist
-```
+**How it works:**
+- Hermes has a built-in scheduler that checks `~/.hermes/trips/` periodically
+- When a trip is upcoming, it calls Tavily for live flight/weather data and messages your Telegram chat
+- No external trigger required — just configure the trip file and Hermes does the rest
 
 **Trip config file** — create on your host machine at `~/.hermes/trips/my-trip.json` (maps to `/opt/data/trips/` inside the container):
 

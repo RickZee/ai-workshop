@@ -477,18 +477,7 @@ Reply "dinner" for restaurant picks, "transport" for metro map.
 4. Pushes Telegram message at scheduled times
 5. Responds to follow-up questions in the same chat
 
-**To enable scheduling** — add to your cron or use a scheduler:
-```bash
-# every morning at 7am — check active trips and push updates
-0 7 * * * curl -X POST http://localhost:8642/trigger/travel-check
-```
-
-Or run the check manually:
-```
-/travel check
-```
-
-**Expected behaviour:** agent is silent when nothing needs attention. Speaks up only when there's something actionable — flight delay, rain warning, check-in window opening, gate change.
+**Expected behaviour:** Hermes monitors trips internally on its own schedule — no external cron needed. Silent when nothing needs attention. Speaks up only when there's something actionable — flight delay, rain warning, check-in window opening, gate change.
 
 ---
 
