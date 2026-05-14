@@ -35,6 +35,7 @@ Dashboard: **http://localhost:9119** · API: **http://localhost:8642**
 - [Basics: LLMs](hermes-agent-workshop/docs/basics-llms.md)
 - [Basics: Agents](hermes-agent-workshop/docs/basics-agents.md)
 - [Use cases](hermes-agent-workshop/docs/use-cases.md) — email, multimedia, SMB, developer tools, personal assistant
+- [Use cases setup](hermes-agent-workshop/docs/use-cases-setup.md) — Vision, Whisper, Slack, Google Calendar, cron scheduler
 
 ## Repo Structure
 
@@ -46,6 +47,7 @@ hermes-agent-workshop/
 │   ├── basics-llms.md
 │   ├── basics-agents.md
 │   ├── use-cases.md
+│   ├── use-cases-setup.md
 │   └── tools.md
 ├── assets/               # Demo files (images, PDF, audio, slides)
 └── docker-compose.yml

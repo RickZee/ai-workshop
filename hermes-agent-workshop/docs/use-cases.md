@@ -1,6 +1,9 @@
 # Use Cases
 
-Each scenario runs on **Email** or **Telegram** — chosen based on what fits the interaction style:
+Each scenario runs on **Email** or **Telegram** — chosen based on what fits the interaction style.
+Some use cases need extra tools (Vision, Whisper, Slack, Google Calendar, cron). See [use-cases-setup.md](use-cases-setup.md) for setup instructions.
+
+
 - **Email** — attachments, formal drafts, long content, async
 - **Telegram** — quick queries, real-time alerts, back-and-forth, mobile-first
 
@@ -47,7 +50,7 @@ Body: Can you extract the key details from this invoice and confirm receipt?
 **What Hermes does:**
 1. Downloads PDF
 2. Extracts: vendor, amount, due date, line items
-3. Saves to `data/invoices/` via Filesystem MCP
+3. Saves to `data/invoices/` via local filesystem
 4. Replies with structured summary
 
 ---
@@ -162,7 +165,7 @@ I tried resetting my password but the email never arrived.
 1. Classifies: account access issue → high priority
 2. Creates ticket in `data/tickets/`
 3. Auto-replies with ticket ID + ETA
-4. (Optional) Notifies support channel via Slack MCP
+4. (Optional) Notifies support channel via Slack API
 
 ---
 
@@ -399,6 +402,93 @@ Fri: half day, wrapped up notification spike, weekly retro
 ```
 
 **Expected:** 3 wins, 1–2 time sinks with observation, 3 prioritized suggestions for next week.
+
+---
+
+## Personal Travel Assistant
+
+### 24. Proactive Travel Assistant (Scheduled)
+
+**Channel:** Telegram (agent-initiated — pushes to you on schedule)
+
+**How it works:**
+Hermes runs on a schedule. You configure your trip once. It monitors and briefs you proactively — no prompting needed.
+
+**Setup — tell Hermes your trip once:**
+```
+I'm flying Lisbon → Toronto on May 20.
+Flight: TAP 351, departs 10:40, arrives 14:15 local.
+Hotel: Marriott Downtown, check-in May 20, checkout May 24.
+Remind me about: check-in, weather, local time, what to pack.
+```
+
+Hermes saves trip to `data/trips/lisbon-2025.json`.
+
+**Scheduled pushes (Hermes messages YOU):**
+
+**T-48h — packing brief:**
+```
+✈️ Lisbon in 2 days.
+
+Weather on arrival: 22°C, sunny. Pack light layers.
+Local time: UTC+1 (Toronto is UTC-4, you lose 5 hrs).
+Online check-in opens now: tap.air-portugal.com
+
+Anything you want me to research before you go?
+```
+
+**T-4h — day-of brief:**
+```
+🛫 Today's the day. TAP 351, 10:40 from YYZ T1.
+
+Current flight status: ON TIME ✅
+Gate: D32 (check again at T-1h)
+Leave home by: 07:30 (traffic is light today)
+Marriott check-in: from 15:00. Early check-in? I can email them now.
+```
+
+**On arrival — local brief:**
+```
+🇵🇹 Welcome to Lisbon!
+
+Local time: 23:40
+Weather this week: 20–24°C, no rain until Thursday.
+Your hotel: Marriott Marquis, Av. dos Aliados — 22 min by metro from airport.
+Metro: Aeroporto → Marquês de Pombal (Red line, 3 stops).
+
+Want restaurant picks near the hotel for tonight?
+```
+
+**Daily morning brief (08:00 local):**
+```
+☀️ Day 2 in Lisbon.
+
+Weather: 23°C, clear. Good day for Alfama.
+Today's suggestion: Tram 28E → São Jorge Castle → LX Factory (closes 20:00).
+Heads up: Thursday forecast shows rain — plan indoor activities then.
+
+Reply "dinner" for restaurant picks, "transport" for metro map.
+```
+
+**What Hermes does:**
+1. Reads trip config from `data/trips/`
+2. Calls Tavily to fetch live flight status, weather, local news
+3. Computes time-to-departure, local timezone offset
+4. Pushes Telegram message at scheduled times
+5. Responds to follow-up questions in the same chat
+
+**To enable scheduling** — add to your cron or use a scheduler:
+```bash
+# every morning at 7am — check active trips and push updates
+0 7 * * * curl -X POST http://localhost:8642/trigger/travel-check
+```
+
+Or run the check manually:
+```
+/travel check
+```
+
+**Expected behaviour:** agent is silent when nothing needs attention. Speaks up only when there's something actionable — flight delay, rain warning, check-in window opening, gate change.
 
 ---
 

@@ -81,7 +81,7 @@ TELEGRAM_BOT_TOKEN=123456789:AAF...
 ```
 
 > **Model:** default is `nvidia/nemotron-3-super-120b-a12b:free` — free, no credit card, supports tool use.  
-> To use Claude directly: set `ANTHROPIC_API_KEY=sk-ant-...` and remove `OPENROUTER_API_KEY`.
+> To switch models, change `OPENROUTER_MODEL` in `.env`. Browse available models at [openrouter.ai/models](https://openrouter.ai/models).
 
 ### Step 2: Start Hermes
 

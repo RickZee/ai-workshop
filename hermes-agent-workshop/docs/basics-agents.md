@@ -34,29 +34,7 @@ Tools are functions the model can call. They bridge the gap between language and
 | Compute | run code, call API, process image |
 | Memory | store fact, retrieve context, update DB |
 
-In this workshop: AgentMail (email R/W) + Filesystem MCP (file R/W) + Vision (image analysis).
-
-## MCP — Model Context Protocol
-
-MCP is [Anthropic](https://anthropic.com)'s open standard for connecting tools to AI models. Think of it as USB-C for AI tools.
-
-- Standardized interface: any MCP server works with any MCP client
-- Tools described as JSON schemas — model knows how to call them
-- Runs as a local process, spawned by the AI client
-- Claude Code ships with MCP support built in
-
-```json
-{
-  "mcpServers": {
-    "agentmail": {
-      "command": "npx",
-      "args": ["-y", "agentmail-mcp"]
-    }
-  }
-}
-```
-
-That's all you need to give Hermes email superpowers.
+In this workshop: AgentMail (email R/W) + Tavily (web search) + OpenRouter vision models (image analysis).
 
 ## AgentMail
 
@@ -107,11 +85,11 @@ Email arrives
 AgentMail webhook → Hermes (Docker)
     │
     ▼
-LLM (OpenRouter) + Tools (MCP)
+LLM (OpenRouter)
     │
-    ├── Read attachment → Vision MCP → extract data
-    ├── Look up context → Filesystem MCP → read history
-    └── Send reply → AgentMail MCP → compose + send
+    ├── Read attachment → OpenRouter vision model → extract data
+    ├── Search web → Tavily API → current information
+    └── Send reply → AgentMail API → compose + send
 ```
 
 Full diagram: see slide `assets/slides/08-hermes-architecture.png`.

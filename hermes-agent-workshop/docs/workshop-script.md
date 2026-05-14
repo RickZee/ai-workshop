@@ -109,21 +109,8 @@ Perceive → Reason → Act → repeat
 5. LLM reasons again with new info
 6. Repeat until task done → send reply
 
-**MCP — Model Context Protocol:**
-> "Anthropic's open standard for connecting tools to AI models. Think USB-C for AI tools. Any MCP server works with any MCP client. Claude Code ships with MCP support built in."
-
-```json
-{
-  "mcpServers": {
-    "agentmail": {
-      "command": "npx",
-      "args": ["-y", "agentmail-mcp"]
-    }
-  }
-}
-```
-
-> "That config line gives Hermes email superpowers."
+**How Hermes calls tools:**
+> "No middleware, no frameworks. Hermes is a pre-built Docker image — configure it with env vars, point it at your AgentMail inbox, and it runs. OpenRouter for the LLM, AgentMail API for email, Tavily for web search."
 
 **AgentMail vs. rolling your own:**
 
@@ -145,12 +132,11 @@ Email arrives
 AgentMail webhook → Hermes (Docker :8642)
     │
     ▼
-LLM (OpenRouter) ──── Tools (MCP)
-    │                    ├── AgentMail MCP  (read/send email)
-    │                    ├── Filesystem MCP (save/load files)
-    │                    └── Vision MCP     (images, PDFs)
-    ▼
-Reply sent via AgentMail API
+LLM (OpenRouter)
+    │
+    ├── Vision model   → analyze attachments
+    ├── Tavily API     → live web search
+    └── AgentMail API  → send reply
 ```
 
 ---
@@ -249,9 +235,9 @@ Run 4–5 scenarios, ~3 min each. Narrate what Hermes is doing while it processe
 |----------|--------|
 | "Can I use my own domain?" | Yes — configure custom SMTP in AgentMail settings |
 | "What does this cost in production?" | [AgentMail](https://agentmail.to) free tier: 1k emails/month. [OpenRouter](https://openrouter.ai) free models have rate limits — upgrade to Claude Haiku for ~$1/M tokens |
-| "How do I add more tools?" | Add MCP server entry to Claude config, restart. See `docs/tools.md` |
+| "How do I add more tools?" | Add env vars to `.env` and `docker-compose.yml`, restart container. See `docs/tools.md` |
 | "Is this secure for real email?" | Read the security notes in `docs/tools.md` before going to prod. Add allowlists, human-in-the-loop for high-stakes actions |
-| "Can Hermes remember past emails?" | Not by default — add Filesystem MCP to write conversation history, read it back in the system prompt |
+| "Can Hermes remember past emails?" | Not by default — write conversation history to `data/` and read it back in the system prompt |
 
 **Next steps for attendees:**
 1. Fork repo → add your own scenario to `docs/use-cases.md`
@@ -260,7 +246,7 @@ Run 4–5 scenarios, ~3 min each. Narrate what Hermes is doing while it processe
 4. Join [AgentMail](https://agentmail.to) Discord for support
 
 **Close:**
-> "The entire agent is in `app/main.py` — under 150 lines. Everything we demoed today is in that file plus a handful of API keys. That's the point: agentic systems are not magic. They're a loop, some tools, and a good system prompt."
+> "Everything we demoed today is driven by a handful of API keys and a good system prompt. That's the point: agentic systems are not magic. They're a loop, some tools, and a prompt that tells the model who it is."
 
 ---
 
