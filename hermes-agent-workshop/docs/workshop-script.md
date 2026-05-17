@@ -10,11 +10,11 @@ Run these **before attendees arrive**:
 
 - [ ] `docker compose up -d` — Hermes running, health check green
 - [ ] `curl http://localhost:8642/health` returns `{"status":"ok"}`
-- [ ] ngrok running: `ngrok http 8642` — URL pasted into AgentMail webhook
-- [ ] Test email sent and Hermes replied (confirm email flow is live)
+- [ ] AgentMail inbox created and address confirmed (via [console.agentmail.to](https://console.agentmail.to))
+- [ ] Test email sent to AgentMail address and Hermes replied (confirm email flow is live)
 - [ ] Telegram bot responding (if demoing Telegram)
 - [ ] Demo asset files ready in `assets/`: `demo-image.jpg`, `sample-invoice.pdf`, `voice-note.mp3`, `error-screenshot.png`
-- [ ] Browser tabs open: web dashboard (http://localhost:9119), ngrok inspector (http://localhost:4040), AgentMail dashboard
+- [ ] Browser tabs open: web dashboard (http://localhost:9119), AgentMail console
 - [ ] Pre-send all demo emails — have replies ready as fallback if live demo lags
 
 ---
@@ -50,7 +50,7 @@ Run these **before attendees arrive**:
 **Temperature:**
 - `0.0` = deterministic (use for agents doing tasks)
 - `1.0` = creative (use for writing)
-- Hermes uses `0.1` — we want reliable, not creative
+- Hermes uses low temperature — we want reliable, not creative
 
 **Tool use / function calling:**
 > "The model emits structured JSON asking the host to call a function. Host runs it, returns result, model continues. This is the foundation of every agent."
@@ -63,14 +63,13 @@ Model: "Email sent."
 
 **Why free models for this workshop?**
 
-`nvidia/nemotron-3-super-120b-a12b:free` via [OpenRouter](https://openrouter.ai): 120B params, supports tool use, free tier, no credit card.
+OpenRouter free tier — no credit card, supports tool use.
 
 | Model | Context | Tool Use | Cost |
 |-------|---------|----------|------|
-| nemotron-3-super-120b (free) | 128k | Yes | Free |
-| Claude Haiku 4.5 | 200k | Yes | ~$1/M tokens |
-| Claude Sonnet 4.6 | 200k | Excellent | ~$3/M tokens |
-| Claude Opus 4.7 | 200k | Excellent | ~$15/M tokens |
+| `nvidia/nemotron-ultra-253b-v1:free` | 128k | Yes | Free |
+| `anthropic/claude-haiku-4-5` | 200k | Yes | ~$1/M tokens |
+| `anthropic/claude-sonnet-4-5` | 200k | Excellent | ~$3/M tokens |
 
 **Live demo:** hit OpenRouter directly:
 
@@ -79,7 +78,7 @@ curl https://openrouter.ai/api/v1/chat/completions \
   -H "Authorization: Bearer $OPENROUTER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "model": "nvidia/nemotron-ultra-253b-v1:free",
     "messages": [{"role":"user","content":"What is an LLM in one sentence?"}]
   }'
 ```
@@ -102,26 +101,15 @@ Perceive → Reason → Act → repeat
 ```
 
 **The agentic loop — what Hermes does for every email:**
-1. Email arrives → AgentMail fires webhook
+1. Email arrives → AgentMail MCP notifies Hermes
 2. LLM reads email: "What do I know? What do I need?"
-3. LLM calls tool (web search, read attachment, look up history)
+3. LLM calls tool (web search, read attachment, save file)
 4. Tool result returned
 5. LLM reasons again with new info
-6. Repeat until task done → send reply
+6. Repeat until task done → calls `reply_to_message` via AgentMail
 
-**How Hermes calls tools:**
-> "No middleware, no frameworks. Hermes is a pre-built Docker image — configure it with env vars, point it at your AgentMail inbox, and it runs. OpenRouter for the LLM, AgentMail API for email, Tavily for web search."
-
-**AgentMail vs. rolling your own:**
-
-Without AgentMail: SES + Lambda + S3 + MIME parser + attachment handling.  
-With AgentMail: one API key.
-
-**Agentic patterns Hermes uses:**
-
-- **ReAct** — model alternates reasoning and acting. Most reliable for task completion.
-- **Tool chaining** — `read_email → extract_data → search_web → send_reply`
-- **Conditional branching** — invoice → payment flow; support → ticket system; lead → CRM sequence
+**How Hermes is configured:**
+> "No code editing. Hermes is a pre-built Docker image. You configure it with `.env` for secrets, `~/.hermes/config.yaml` for model and behaviour — then `docker compose up`. That's it."
 
 **Hermes architecture:**
 
@@ -129,15 +117,23 @@ With AgentMail: one API key.
 Email arrives
     │
     ▼
-AgentMail webhook → Hermes (Docker :8642)
+AgentMail (agent-owned inbox) ──→ Hermes Gateway (Docker :8642)
     │
     ▼
 LLM (OpenRouter)
     │
-    ├── Vision model   → analyze attachments
-    ├── Tavily API     → live web search
-    └── AgentMail API  → send reply
+    ├── Auxiliary vision model  → analyze image/PDF attachments
+    ├── Tavily / web search     → live information
+    ├── Built-in cron           → scheduled proactive tasks
+    └── AgentMail MCP tools     → send reply
 ```
+
+**Agentic patterns Hermes uses:**
+
+- **ReAct** — model alternates reasoning and acting. Most reliable for task completion.
+- **Tool chaining** — `read_email → extract_data → search_web → send_reply`
+- **Conditional branching** — invoice → payment flow; support → ticket system; lead → CRM sequence
+- **Scheduled subagents** — cron jobs run in isolated agent sessions, deliver to Telegram or email
 
 ---
 
@@ -157,7 +153,29 @@ cp .env.example .env
 
 Open `.env`, fill in keys. Workshop-specific keys on the shared slide (or pre-filled for attendees).
 
-### Step 2 — Start Hermes
+Minimum to start:
+```env
+OPENROUTER_API_KEY=sk-or-...
+AGENTMAIL_API_KEY=am_...
+```
+
+### Step 2 — Configure model and integrations
+
+Mac/Linux:
+```bash
+mkdir -p ~/.hermes
+cp config.yaml.example ~/.hermes/config.yaml
+```
+
+Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.hermes"
+Copy-Item config.yaml.example "$env:USERPROFILE\.hermes\config.yaml"
+```
+
+`config.yaml.example` is pre-configured with OpenRouter + vision model + AgentMail MCP.
+
+### Step 3 — Start Hermes
 
 ```bash
 docker compose up -d
@@ -167,20 +185,14 @@ curl http://localhost:8642/health
 
 Open **http://localhost:9119** — show dashboard.
 
-### Step 3 — AgentMail webhook
-
-```bash
-ngrok http 8642
-# Copy https://... URL
-```
-
-1. AgentMail dashboard → Inboxes → your inbox → Settings
-2. Webhook URL: `https://<ngrok-url>/webhook/email`
-3. Save
-
 ### Step 4 — First email test
 
-Send from your personal email to the AgentMail inbox:
+First tell Hermes to create an inbox (via Telegram or direct message):
+```
+Create an inbox called "hermes" for me
+```
+
+Then send from your personal email to the AgentMail address:
 
 ```
 To: hermes@yourdomain.agentmail.to
@@ -194,14 +206,19 @@ Watch logs live:
 docker compose logs -f hermes
 ```
 
-Show reply arriving. Point to ngrok inspector at http://localhost:4040.
+Show reply arriving in your inbox.
 
 ### Step 5 — Telegram (optional, if time allows)
 
 1. [@BotFather](https://t.me/BotFather) → `/newbot` → copy token
-2. Add `TELEGRAM_BOT_TOKEN=...` to `.env`
-3. `docker compose up -d --force-recreate hermes`
-4. Message bot in Telegram → reply appears
+2. [@userinfobot](https://t.me/userinfobot) → get your numeric user ID
+3. Add to `.env`:
+   ```env
+   TELEGRAM_BOT_TOKEN=...
+   TELEGRAM_ALLOWED_USERS=123456789
+   ```
+4. `docker compose up -d --force-recreate hermes`
+5. Message bot in Telegram → reply appears
 
 ---
 
@@ -233,20 +250,21 @@ Run 4–5 scenarios, ~3 min each. Narrate what Hermes is doing while it processe
 
 | Question | Answer |
 |----------|--------|
-| "Can I use my own domain?" | Yes — configure custom SMTP in AgentMail settings |
-| "What does this cost in production?" | [AgentMail](https://agentmail.to) free tier: 1k emails/month. [OpenRouter](https://openrouter.ai) free models have rate limits — upgrade to Claude Haiku for ~$1/M tokens |
-| "How do I add more tools?" | Add env vars to `.env` and `docker-compose.yml`, restart container. See `docs/tools.md` |
-| "Is this secure for real email?" | Read the security notes in `docs/tools.md` before going to prod. Add allowlists, human-in-the-loop for high-stakes actions |
-| "Can Hermes remember past emails?" | Not by default — Hermes can persist history to `~/.hermes/` (mounted into the container). Configure via dashboard. |
+| "Can I use my own domain?" | Yes — AgentMail paid plans support custom domains |
+| "What does this cost in production?" | AgentMail free: 3 inboxes, 3k emails/month. OpenRouter free models have rate limits — upgrade to Claude Haiku for ~$1/M tokens |
+| "How do I add more tools?" | Add env vars to `.env`, update `config.yaml`, restart. See `docs/tools.md` |
+| "Is this secure for real email?" | AgentMail is a dedicated agent inbox — not your personal account. Add `TELEGRAM_ALLOWED_USERS` to lock down who can send commands |
+| "Can Hermes remember past emails?" | Yes — Hermes has a built-in memory system. Persistent context lives in `~/.hermes/memories/` (mounted into the container) |
+| "How do scheduled tasks work?" | Built-in cron scheduler — tell Hermes to schedule something via chat or `/cron add`. No external cron needed |
 
 **Next steps for attendees:**
 1. Fork repo → add your own scenario to `docs/use-cases.md`
-2. Swap the free model for Claude Sonnet 4.6 for better accuracy
-3. Add [Tavily](https://app.tavily.com) for live web search — just one API key
-4. Join [AgentMail](https://agentmail.to) Discord for support
+2. Swap the free model for `anthropic/claude-haiku-4-5` for better accuracy
+3. Add [Tavily](https://app.tavily.com) for live web search — one env var
+4. Try the built-in cron: `/cron add "every morning" "summarize my emails from yesterday"`
 
 **Close:**
-> "Everything we demoed today is driven by a handful of API keys and a good system prompt. That's the point: agentic systems are not magic. They're a loop, some tools, and a prompt that tells the model who it is."
+> "Everything we demoed today is driven by a handful of API keys and a config file. That's the point: agentic systems are not magic. They're a loop, some tools, and a model that knows what it's supposed to do."
 
 ---
 

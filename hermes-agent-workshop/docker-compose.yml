@@ -5,16 +5,19 @@ services:
     restart: unless-stopped
     command: gateway run
     ports:
-      - "8642:8642"   # Gateway / API
-      - "9119:9119"   # Web Dashboard
+      - "8642:8642"   # OpenAI-compatible API server
+      - "9119:9119"   # Web dashboard
     volumes:
       - ~/.hermes:/opt/data
+      - ./data:/workspace/data   # local files — accessible to filesystem MCP server
     environment:
       - HERMES_DASHBOARD=1
+      # LLM — OpenRouter
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - OPENROUTER_MODEL=${OPENROUTER_MODEL}
+      # AgentMail — passed into MCP server via config.yaml
       - AGENTMAIL_API_KEY=${AGENTMAIL_API_KEY}
-      - AGENTMAIL_INBOX=${AGENTMAIL_INBOX}
-      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      # Telegram
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS}
+      # Web search (optional)
+      - TAVILY_API_KEY=${TAVILY_API_KEY}

@@ -1,6 +1,6 @@
 # Hermes Setup Guide
 
-Everything needed to run Hermes locally: Docker, email (AgentMail), Telegram, and live web search.
+Everything needed to run Hermes locally in Docker: model, email (AgentMail), Telegram, and web search.
 
 ---
 
@@ -10,17 +10,15 @@ Everything needed to run Hermes locally: Docker, email (AgentMail), Telegram, an
 |------|---------|-------|
 | [Docker](https://docs.docker.com/get-docker/) | 24+ | `docker --version` |
 | [Docker Compose](https://docs.docker.com/compose/install/) | 2+ | `docker compose version` |
-| [ngrok](https://ngrok.com/download) | any | `ngrok --version` |
 
-API keys (all free tier, no credit card):
+API keys needed:
 
 | Service | Purpose | URL |
 |---------|---------|-----|
-| [OpenRouter](https://openrouter.ai) | LLM inference | [openrouter.ai](https://openrouter.ai) |
-| [AgentMail](https://agentmail.to) | Email inbox for agent | [agentmail.to](https://agentmail.to) |
-| [ngrok](https://ngrok.com) | Public webhook tunnel | [dashboard.ngrok.com](https://dashboard.ngrok.com) |
-| [Tavily](https://app.tavily.com) | Live web search (optional) | [app.tavily.com](https://app.tavily.com) |
+| [OpenRouter](https://openrouter.ai) | LLM inference (free tier available) | [openrouter.ai](https://openrouter.ai) |
+| [AgentMail](https://agentmail.to) | Agent-owned email inbox | [console.agentmail.to](https://console.agentmail.to) |
 | [Telegram BotFather](https://t.me/BotFather) | Telegram channel (optional) | [@BotFather](https://t.me/BotFather) |
+| [Tavily](https://app.tavily.com) | Live web search (optional) | [app.tavily.com](https://app.tavily.com) |
 
 ---
 
@@ -69,42 +67,57 @@ cd hermes-agent-workshop
 copy .env.example .env
 ```
 
-Edit `.env`:
+Edit `.env` — fill in your keys:
 
 ```env
-# Required
 OPENROUTER_API_KEY=sk-or-...
 AGENTMAIL_API_KEY=am_...
-AGENTMAIL_INBOX=hermes@yourdomain.agentmail.to
-TAVILY_API_KEY=tvly-...
-TELEGRAM_BOT_TOKEN=123456789:AAF...
 ```
 
-> **Model:** default is `nvidia/nemotron-3-super-120b-a12b:free` — free, no credit card, supports tool use.  
-> To switch models, change `OPENROUTER_MODEL` in `.env`. Browse available models at [openrouter.ai/models](https://openrouter.ai/models).
+Telegram and Tavily are optional — add when you get to those sections.
 
-### Step 2: Start Hermes
+---
+
+### Step 2: Configure Hermes
+
+Hermes reads `~/.hermes/config.yaml` for model and integration settings. Create it from the example:
+
+Mac/Linux:
+```bash
+mkdir -p ~/.hermes
+cp config.yaml.example ~/.hermes/config.yaml
+```
+
+Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.hermes"
+Copy-Item config.yaml.example "$env:USERPROFILE\.hermes\config.yaml"
+```
+
+The example config sets up:
+- OpenRouter free model for LLM
+- Google Gemini Flash for vision (images/PDFs)
+- AgentMail as MCP skill for email
+
+> **Switch models:** edit `~/.hermes/config.yaml` → change `default:`. Browse free models at [openrouter.ai/models](https://openrouter.ai/models).
+
+---
+
+### Step 3: Start Hermes
 
 ```bash
 docker compose up -d
 ```
 
 Verify:
-
 ```bash
 docker compose ps
 # hermes   running   0.0.0.0:8642->8642/tcp, 0.0.0.0:9119->9119/tcp
-
-curl http://localhost:8642/health
-# {"status":"ok","model":"nvidia/nemotron-3-super-120b-a12b:free"}
 ```
 
-### Step 3: Open the web dashboard
-
-**http://localhost:9119** — shows active integrations, message log, model status.
+Open the web dashboard: **http://localhost:9119**
 
 Watch logs:
-
 ```bash
 docker compose logs -f hermes
 ```
@@ -113,88 +126,38 @@ docker compose logs -f hermes
 
 ## Part 2 — Email via AgentMail
 
-### Step 1: Create account and inbox
+AgentMail gives Hermes its own dedicated email address (e.g. `hermes@yourdomain.agentmail.to`) — no SMTP/IMAP setup, no personal inbox needed. It connects as an MCP skill.
 
-1. Go to [agentmail.to](https://agentmail.to) → sign up
-2. Dashboard → **Inboxes** → **New Inbox**
-3. Pick subdomain, e.g. `hermes` → gives `hermes@yourdomain.agentmail.to`
-4. Click **Create**
+### Step 1: Create account and get API key
 
-### Step 2: Get API key
+1. Go to [console.agentmail.to](https://console.agentmail.to) → sign up (free)
+2. Copy your API key (starts with `am_`)
 
-1. AgentMail Dashboard → **Settings** → **API Keys** → **Generate New Key**
-2. Copy the key (shown once)
-
-Update `.env`:
+### Step 2: Add key to `.env`
 
 ```env
 AGENTMAIL_API_KEY=am_...
-AGENTMAIL_INBOX=hermes@yourdomain.agentmail.to
 ```
 
-Restart to pick up new values:
+The key is already wired through `docker-compose.yml` into the container environment, and `config.yaml.example` passes it into the AgentMail MCP server.
+
+### Step 3: Restart and create an inbox
 
 ```bash
 docker compose up -d --force-recreate hermes
 ```
 
-### Step 3: Expose Hermes via ngrok
+Hermes creates and manages inboxes via the AgentMail tools. On first use, tell Hermes:
 
-AgentMail needs a public HTTPS URL to deliver emails to your local container.
-
-**Install ngrok:**
-
-Mac:
-```bash
-brew install ngrok/ngrok/ngrok
+```
+Create an inbox called "hermes" for me
 ```
 
-Windows:
-```cmd
-winget install ngrok.ngrok
-```
-Or download from [ngrok.com/download](https://ngrok.com/download).
+It replies with the inbox address, e.g. `hermes@yourdomain.agentmail.to`.
 
-Linux (Ubuntu/Debian):
-```bash
-curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-sudo apt update && sudo apt install ngrok
-```
+### Step 4: Test
 
-Authenticate (one-time, token from [dashboard.ngrok.com](https://dashboard.ngrok.com)):
-
-```bash
-ngrok config add-authtoken <your-token>
-```
-
-Start tunnel (keep this terminal open):
-
-```bash
-ngrok http 8642
-```
-
-Output:
-```
-Forwarding  https://abc123.ngrok-free.app -> http://localhost:8642
-```
-
-Copy that `https://` URL.
-
-> **Note:** Free ngrok URLs change on every restart — update AgentMail webhook each time.
-
-### Step 4: Set webhook in AgentMail
-
-1. AgentMail Dashboard → **Inboxes** → your inbox → **Settings**
-2. **Webhook URL** → paste ngrok URL + `/webhook/email`:
-   ```
-   https://abc123.ngrok-free.app/webhook/email
-   ```
-3. **Save**
-
-### Step 5: Test
-
-Send an email to your inbox:
+Send an email to that address from your personal email:
 
 ```
 To: hermes@yourdomain.agentmail.to
@@ -202,7 +165,11 @@ Subject: Test
 Body: Hello Hermes! What can you do?
 ```
 
-Hermes replies within ~10 seconds. Check ngrok inspector at **http://localhost:4040** for request/response detail.
+Hermes polls for new messages and replies. Check logs:
+
+```bash
+docker compose logs -f hermes
+```
 
 ---
 
@@ -210,29 +177,24 @@ Hermes replies within ~10 seconds. Check ngrok inspector at **http://localhost:4
 
 ### Step 1: Create a bot
 
-1. Open Telegram → search **@BotFather** → send `/newbot`
+1. Open Telegram → search **[@BotFather](https://t.me/BotFather)** → send `/newbot`
 2. Enter display name, e.g. `Hermes Agent`
 3. Enter username, e.g. `hermes_agent_bot` (must end in `bot`)
 4. Copy the token BotFather sends
 
-### Step 2: Add to `.env`
+### Step 2: Get your user ID
+
+Message **[@userinfobot](https://t.me/userinfobot)** — it replies with your numeric user ID (e.g. `123456789`).
+
+### Step 3: Add to `.env`
 
 ```env
 TELEGRAM_BOT_TOKEN=123456789:AAF...
+TELEGRAM_ALLOWED_USERS=123456789
 ```
 
-### Step 3: Find your chat ID
-
-1. Open your new bot in Telegram → click **Start** → send any message
-2. Visit in browser (replace `<TOKEN>`):
-   ```
-   https://api.telegram.org/bot<TOKEN>/getUpdates
-   ```
-3. Find `"chat":{"id": 123456789}` → copy that number
-
-```env
-TELEGRAM_CHAT_ID=123456789
-```
+> **`TELEGRAM_ALLOWED_USERS`** — comma-separated numeric user IDs. Without it, the gateway denies all users.
+> Multiple users: `TELEGRAM_ALLOWED_USERS=123456789,987654321`
 
 ### Step 4: Restart and test
 
@@ -240,24 +202,29 @@ TELEGRAM_CHAT_ID=123456789
 docker compose up -d --force-recreate hermes
 ```
 
-Send a message to your bot in Telegram:
+Open your bot in Telegram → send a message:
 
 ```
-What AI stocks should I watch this week?
+What can you do?
 ```
 
-Reply arrives within ~10 seconds. Hermes polls Telegram every 2 seconds and runs alongside email simultaneously.
+Reply arrives within a few seconds.
+
+### Group chats
+
+Telegram privacy mode is **on** by default — bots only see `/` commands. To fix:
+
+1. Message @BotFather → `/mybots` → your bot → **Bot Settings → Group Privacy → Turn off**
+2. Remove and re-add the bot to any existing groups
 
 ---
 
 ## Part 4 — Live Web Search (Tavily)
 
-Triggers automatically when email or Telegram message contains keywords: `stock`, `news`, `search`, `research`, `latest`, `today`, `market`, `price`, `trend`.
-
 ### Step 1: Get API key
 
 1. Go to [app.tavily.com](https://app.tavily.com) → sign up (free, no credit card)
-2. Copy key from dashboard (starts with `tvly-`)
+2. Copy key (starts with `tvly-`)
 
 ### Step 2: Add to `.env` and restart
 
@@ -269,41 +236,38 @@ TAVILY_API_KEY=tvly-...
 docker compose up -d --force-recreate hermes
 ```
 
-### Step 3: Test
+### Test
+
+Send via email or Telegram:
 
 ```
-Subject: AI stock research
-Body: What are the top AI-related stocks to watch this week? Search for recent news.
+What are the top AI stories this week?
 ```
-
-Hermes searches the web and replies with a sourced summary.
 
 ---
 
 ## Data & Persistence
 
-Docker containers are stateless — anything written inside a container disappears when it restarts. To survive restarts, Hermes writes data to a **mounted volume**: a folder on your host machine that the container reads and writes as if it were local.
+Docker containers are stateless — anything written inside disappears on restart. Hermes persists everything to `~/.hermes/` on your host, mounted into the container at `/opt/data`.
 
 ```
 Your machine          Container
 ~/.hermes/    ←——→   /opt/data/
 ```
 
-This means:
-- Files Hermes creates (tickets, invoices, trip configs) are immediately visible on your host at `~/.hermes/`
-- You can drop files in (e.g. a trip config) and Hermes picks them up without a restart
-- Data survives `docker compose down` and `docker compose up`
+Key files:
 
-| Host path | Container path | Contents |
-|-----------|---------------|---------|
-| `~/.hermes/trips/` | `/opt/data/trips/` | Travel assistant configs |
-| `~/.hermes/tickets/` | `/opt/data/tickets/` | Support tickets |
-| `~/.hermes/invoices/` | `/opt/data/invoices/` | Processed invoices |
-| `~/.hermes/expenses.csv` | `/opt/data/expenses.csv` | Expense log |
+| Host path | Contents |
+|-----------|---------|
+| `~/.hermes/config.yaml` | Model, MCP servers, display settings |
+| `~/.hermes/.env` | API keys (used by `hermes` CLI — Docker uses its own `.env`) |
+| `~/.hermes/memories/` | Persistent agent memory across sessions |
+| `~/.hermes/sessions/` | Conversation history |
+| `~/.hermes/cron/` | Scheduled task definitions |
 
 Windows path: `%USERPROFILE%\.hermes\`
 
-> **Full reset:** `rm -rf ~/.hermes` wipes all persisted data. Use only when you want a clean slate.
+Files survive `docker compose down` + `docker compose up`. Only `rm -rf ~/.hermes` clears everything.
 
 ---
 
@@ -311,7 +275,7 @@ Windows path: `%USERPROFILE%\.hermes\`
 
 | Port | Purpose |
 |------|---------|
-| `8642` | API / webhook endpoint (expose this via ngrok) |
+| `8642` | OpenAI-compatible API server + gateway |
 | `9119` | Web dashboard (local only) |
 
 ---
@@ -319,26 +283,25 @@ Windows path: `%USERPROFILE%\.hermes\`
 ## Troubleshooting
 
 **Hermes not replying to emails**
-- ngrok still running? Check http://localhost:4040
-- Webhook reachable? `curl https://abc123.ngrok-free.app/webhook/email`
-- `docker compose logs hermes | grep -i error`
+- Confirm `AGENTMAIL_API_KEY` is set and starts with `am_`
+- Check MCP server started: `docker compose logs hermes | grep -i agentmail`
+- Verify inbox exists in [console.agentmail.to](https://console.agentmail.to)
 
 **Container fails to start**
-- `.env` missing required keys — `OPENROUTER_API_KEY` and `AGENTMAIL_API_KEY` are required
+- `OPENROUTER_API_KEY` is the only strictly required key
 - Run from `hermes-agent-workshop/` directory: `docker compose down && docker compose up -d`
 
 **Model errors or rate limits**
-- Switch model: `OPENROUTER_MODEL=mistralai/mistral-7b-instruct:free` in `.env`
+- Edit `~/.hermes/config.yaml` → change `default:` to another free model → restart
 - Check quota at [openrouter.ai](https://openrouter.ai)
 
 **Telegram not responding**
-- Confirm token has no trailing spaces
-- Send at least one message to bot before checking `getUpdates`
-- `docker compose logs -f hermes` — look for polling errors
+- `TELEGRAM_ALLOWED_USERS` must be a numeric user ID, not a username
+- `docker compose logs -f hermes` — look for gateway errors
 
 **Full reset**
 ```bash
 docker compose down -v
-rm -rf ~/.hermes      # wipes all persisted data
+rm -rf ~/.hermes
 docker compose up -d
 ```

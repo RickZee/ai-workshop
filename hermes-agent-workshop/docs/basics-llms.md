@@ -40,22 +40,21 @@ Model: "Email sent successfully."
 
 ## Why Free Models for This Workshop?
 
-`nvidia/nemotron-3-super-120b-a12b:free` via [OpenRouter](https://openrouter.ai):
-- 120B parameter model — strong reasoning
+`nvidia/nemotron-ultra-253b-v1:free` via [OpenRouter](https://openrouter.ai):
+- 253B parameter model — strong reasoning
 - Free tier, no credit card
 - Supports tool use
 - Good enough for all workshop demos
 
-In production you'd likely use Claude Sonnet 4.6 for better accuracy and reliability.
+In production you'd likely use Claude Sonnet for better accuracy and reliability.
 
 ## Model Comparison
 
 | Model | Context | Tool Use | Cost |
 |-------|---------|----------|------|
-| [nemotron-3-super-120b](https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b:free) (free) | 128k | Yes | Free |
-| [Claude Haiku 4.5](https://anthropic.com/claude) | 200k | Yes | ~$1/M tokens |
-| [Claude Sonnet 4.6](https://anthropic.com/claude) | 200k | Excellent | ~$3/M tokens |
-| [Claude Opus 4.7](https://anthropic.com/claude) | 200k | Excellent | ~$15/M tokens |
+| [nemotron-ultra-253b](https://openrouter.ai/nvidia/nemotron-ultra-253b-v1:free) (free) | 128k | Yes | Free |
+| [Claude Haiku 4.5](https://openrouter.ai/anthropic/claude-haiku-4-5) | 200k | Yes | ~$1/M tokens |
+| [Claude Sonnet 4.5](https://openrouter.ai/anthropic/claude-sonnet-4-5) | 200k | Excellent | ~$3/M tokens |
 
 ## What LLMs Cannot Do (Alone)
 

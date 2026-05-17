@@ -1,83 +1,124 @@
 # Tools & Integrations
 
-Hermes is a pre-built Docker image. Configure integrations via `.env` and `docker-compose.yml` — no code editing needed.
+Hermes is a pre-built Docker image. Configure via `.env`, `docker-compose.yml`, and `~/.hermes/config.yaml` — no code editing needed.
+
+---
 
 ## Core (Required)
 
 ### OpenRouter — LLM
 
-All model calls go through [OpenRouter](https://openrouter.ai). One API key, access to 100+ models.
+All model calls go through [OpenRouter](https://openrouter.ai). One API key, 100+ models.
 
+`.env`:
 ```env
 OPENROUTER_API_KEY=sk-or-...
-OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
 ```
 
-To switch models, change `OPENROUTER_MODEL`. Browse at [openrouter.ai/models](https://openrouter.ai/models).
+`~/.hermes/config.yaml`:
+```yaml
+model:
+  provider: openrouter
+  default: nvidia/nemotron-ultra-253b-v1:free
+```
+
+Browse models at [openrouter.ai/models](https://openrouter.ai/models). Filter "Free" for no-cost options.
 
 ---
+
+## Optional Integrations
 
 ### AgentMail — Email
 
-[AgentMail](https://agentmail.to) provides the inbox and webhook. Hermes receives emails via webhook, replies via REST API.
+Gives Hermes its own dedicated email address (e.g. `hermes@yourdomain.agentmail.to`). No SMTP/IMAP, no personal inbox. Connects as an MCP skill — provides 11 tools: `create_inbox`, `send_message`, `reply_to_message`, `list_threads`, `get_attachment`, and more.
 
+`.env`:
 ```env
 AGENTMAIL_API_KEY=am_...
-AGENTMAIL_INBOX=hermes@yourdomain.agentmail.to
 ```
+
+`~/.hermes/config.yaml`:
+```yaml
+mcp_servers:
+  agentmail:
+    command: "npx"
+    args: ["-y", "agentmail-mcp"]
+    env:
+      AGENTMAIL_API_KEY: "${AGENTMAIL_API_KEY}"
+```
+
+`docker-compose.yml` already passes `AGENTMAIL_API_KEY` into the container. Restart to apply:
+```bash
+docker compose up -d --force-recreate hermes
+```
+
+Free tier: 3 inboxes, 3,000 emails/month. Sign up at [console.agentmail.to](https://console.agentmail.to).
 
 ---
 
-## Optional
+### Telegram
 
-### Tavily — Web Search
+Hermes polls Telegram via the Bot API and replies in-chat.
 
-Triggered automatically on keywords: `stock`, `news`, `search`, `research`, `latest`, `today`, `market`, `price`, `trend`.
-
-```env
-TAVILY_API_KEY=tvly-...
-```
-
----
-
-### Telegram — Chat Channel
-
-Hermes polls Telegram every 2 seconds and replies in-chat.
-
+`.env`:
 ```env
 TELEGRAM_BOT_TOKEN=123456789:AAF...
-TELEGRAM_CHAT_ID=123456789
+TELEGRAM_ALLOWED_USERS=123456789
+```
+
+For cron job delivery to a specific group/channel:
+```env
+TELEGRAM_HOME_CHANNEL=-1001234567890
 ```
 
 ---
 
 ### Vision — Image Analysis
 
-Switch to a vision-capable model. No extra configuration beyond the model name.
+Auxiliary model for image/PDF attachments. Set in `~/.hermes/config.yaml`:
 
-```env
-OPENROUTER_MODEL=google/gemini-flash-1.5
+```yaml
+auxiliary:
+  vision:
+    provider: openrouter
+    model: google/gemini-2.5-flash
 ```
-
-Good options:
 
 | Model | Cost | Notes |
 |-------|------|-------|
-| `google/gemini-flash-1.5` | Free tier | Recommended |
+| `google/gemini-2.5-flash` | Free tier | Recommended |
 | `meta-llama/llama-3.2-11b-vision-instruct:free` | Free | Decent |
 | `openai/gpt-4o-mini` | ~$0.15/M tokens | Reliable |
+
+No extra API key — all route through `OPENROUTER_API_KEY`.
+
+---
+
+### Tavily — Web Search
+
+`.env`:
+```env
+TAVILY_API_KEY=tvly-...
+```
+
+Other supported backends: Firecrawl (`FIRECRAWL_API_KEY`), SearXNG (self-hosted, `SEARXNG_URL`), Exa (`EXA_API_KEY`).
 
 ---
 
 ## Applying Changes
 
 After editing `.env`:
-
 ```bash
 docker compose up -d --force-recreate hermes
+```
+
+After editing `~/.hermes/config.yaml`:
+```bash
+docker compose restart hermes
 ```
 
 Verify:
 ```bash
 curl http://localhost:8642/health
+docker compose logs -f hermes
 ```

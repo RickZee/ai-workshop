@@ -34,17 +34,13 @@ Tools are functions the model can call. They bridge the gap between language and
 | Compute | run code, call API, process image |
 | Memory | store fact, retrieve context, update DB |
 
-In this workshop: AgentMail (email R/W) + Tavily (web search) + OpenRouter vision models (image analysis).
+In this workshop: AgentMail MCP (email R/W) + Tavily (web search) + OpenRouter vision models (image analysis) + built-in cron (scheduled tasks).
 
-## AgentMail
+## Email via AgentMail
 
-[AgentMail](https://agentmail.to) provides an inbox designed for AI agents:
-- Webhook on every incoming email
-- API to send, reply, forward
-- Attachment access via URL
-- Thread context maintained automatically
+[AgentMail](https://agentmail.to) gives Hermes its own dedicated email address — the agent owns the inbox, not the user. No SMTP/IMAP credentials, no personal account access.
 
-Without AgentMail you'd need: SES + Lambda + S3 + parsing library + MIME handling. With AgentMail: one API key.
+Connects as an MCP skill. Provides 11 tools: `create_inbox`, `send_message`, `reply_to_message`, `list_threads`, `get_attachment`, and more. One API key in `.env`, one block in `config.yaml`.
 
 ## Agentic Patterns Used in Hermes
 
@@ -82,14 +78,15 @@ Agent pauses and asks for approval before high-stakes actions (sending money, de
 Email arrives
     │
     ▼
-AgentMail webhook → Hermes (Docker)
+AgentMail (MCP) ──→ Hermes Gateway (Docker)
     │
     ▼
 LLM (OpenRouter)
     │
-    ├── Read attachment → OpenRouter vision model → extract data
-    ├── Search web → Tavily API → current information
-    └── Send reply → AgentMail API → compose + send
+    ├── Auxiliary vision model  → analyze image/PDF attachments
+    ├── Tavily / web search     → live information
+    ├── Built-in cron           → scheduled proactive tasks
+    └── AgentMail send_reply    → compose + send reply
 ```
 
 Full diagram: see slide `assets/slides/08-hermes-architecture.png`.

@@ -1,0 +1,28 @@
+# Copy to ~/.hermes/config.yaml before starting Hermes
+# ~/.hermes/ is mounted into the container at /opt/data
+
+model:
+  provider: openrouter
+  default: nvidia/nemotron-ultra-253b-v1:free
+  api_mode: chat_completions
+
+# Vision model for image/PDF attachments
+auxiliary:
+  vision:
+    provider: openrouter
+    model: google/gemini-2.5-flash
+
+# AgentMail — agent-owned email inbox via MCP
+# AGENTMAIL_API_KEY is read from the container's environment (set in .env / docker-compose.yml)
+mcp_servers:
+  agentmail:
+    command: "npx"
+    args: ["-y", "agentmail-mcp"]
+    env:
+      AGENTMAIL_API_KEY: "${AGENTMAIL_API_KEY}"
+
+  # Filesystem — read/write access to ./data/ in the repo
+  # Mounted into container at /workspace/data via docker-compose.yml
+  filesystem:
+    command: "npx"
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/workspace/data"]

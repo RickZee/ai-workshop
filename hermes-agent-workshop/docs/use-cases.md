@@ -26,10 +26,10 @@ Body: Please describe this image and suggest how it could be used in a marketing
 ```
 
 **What Hermes does:**
-1. Downloads attachment via AgentMail API
-2. Passes image to Vision tool
+1. Reads attachment from email
+2. Passes image to auxiliary vision model
 3. Generates description + marketing copy
-4. Sends reply
+4. Sends reply 
 
 **Expected reply:** 2–3 paragraph description + email copy draft.
 
@@ -68,10 +68,10 @@ Body: I recorded a quick note. Can you transcribe and summarize it?
 ```
 
 **What Hermes does:**
-1. Downloads audio
-2. Sends to transcription tool (Whisper-compatible)
+1. Reads audio attachment from email
+2. Transcribes via built-in STT (local Whisper)
 3. Summarizes key points
-4. Replies with transcript + summary
+4. Replies with transcript + summary 
 
 ---
 
@@ -414,15 +414,15 @@ Fri: half day, wrapped up notification spike, weekly retro
 **How it works:**
 Hermes runs on a schedule. You configure your trip once. It monitors and briefs you proactively — no prompting needed.
 
-**Setup — tell Hermes your trip once:**
+**Setup — tell Hermes your trip once (via Telegram or email):**
 ```
-I'm flying Lisbon → Toronto on May 20.
-Flight: TAP 351, departs 10:40, arrives 14:15 local.
+I'm flying to Lisbon on May 20.
+Flight: TAP 351, departs 10:40 from YYZ, arrives 22:15.
 Hotel: Marriott Downtown, check-in May 20, checkout May 24.
-Remind me about: check-in, weather, local time, what to pack.
+Set up a daily morning briefing — weather, flight status, local tips.
 ```
 
-Hermes saves trip to `~/.hermes/trips/lisbon-2025.json` (host path — mounted into container at `/opt/data/trips/`).
+Hermes creates a cron job internally and saves trip context to `~/.hermes/` (persisted via Docker volume).
 
 **Scheduled pushes (Hermes messages YOU):**
 
@@ -471,13 +471,68 @@ Reply "dinner" for restaurant picks, "transport" for metro map.
 ```
 
 **What Hermes does:**
-1. Reads trip config from `~/.hermes/trips/` (host path, mounted into container)
-2. Calls Tavily to fetch live flight status, weather, local news
+1. Runs a built-in cron job on schedule (no external trigger needed)
+2. Calls Tavily for live flight status, weather, local news
 3. Computes time-to-departure, local timezone offset
 4. Pushes Telegram message at scheduled times
 5. Responds to follow-up questions in the same chat
 
 **Expected behaviour:** Hermes monitors trips internally on its own schedule — no external cron needed. Silent when nothing needs attention. Speaks up only when there's something actionable — flight delay, rain warning, check-in window opening, gate change.
+
+---
+
+## Local Files (Filesystem MCP)
+
+> **Setup required:** see [use-cases-setup.md — Filesystem MCP](use-cases-setup.md#filesystem-mcp-local-files)
+
+The filesystem MCP server gives Hermes read/write access to `./data/` in the repo. Files you drop there are immediately available to the agent. Hermes can read, write, search, and summarize — all through standard MCP tools.
+
+**Channel:** Telegram or Email
+
+---
+
+### 25. Summarize a Local File
+
+Drop any file into `./data/` — a CSV, log, JSON, markdown, or text file.
+
+**Send in Telegram:**
+```
+Summarize the file data/report.csv and highlight any anomalies
+```
+
+**What Hermes does:**
+1. Calls `read_file` via filesystem MCP
+2. Analyzes content
+3. Returns summary with observations
+
+---
+
+### 26. Process and Write Results
+
+**Send in Telegram:**
+```
+Read data/sales.csv, calculate total revenue by region, and write the results to data/revenue-summary.md
+```
+
+**What Hermes does:**
+1. Reads source file via `read_file`
+2. Performs analysis
+3. Writes output via `write_file` to `data/revenue-summary.md`
+4. Result is immediately visible on your host machine at `./data/revenue-summary.md`
+
+---
+
+### 27. Watch a Folder and Report
+
+**Send in Telegram:**
+```
+List everything in the data/ folder and tell me what's there
+```
+
+**What Hermes does:**
+1. Calls `list_directory` on `/workspace/data`
+2. Describes each file (type, name, apparent purpose)
+3. Suggests next actions
 
 ---
 
