@@ -4,7 +4,7 @@
 
 Audience: engineers, SREs, QA, architects, and technical leads who can read code and reason about systems, but have not built with LLMs. No ML background assumed. No math beyond intuition.
 
-Format: six modules, ~60–75 minutes each. Run them weekly, or pair two per half-day. Each module ends with a "so what" slide and a discussion prompt. Concepts only — the hands-on lab (`hermes-agent-workshop/`) is optional homework after Module 4.
+Format: six modules, ~60–75 minutes each. Run them weekly, or pair two per half-day. Each module ends with a "so what" slide and a discussion prompt. Concepts only — the hands-on lab (`handson-lab/`, Workshop 2) is the companion course, best run after Module 4.
 
 | # | Module | Core question |
 |---|--------|---------------|
@@ -552,7 +552,7 @@ flowchart LR
 - Your host owns execution — that is where permissions, audit, and safety live
 - MCP turns integrations into reusable services; one server per internal system is a real roadmap
 - Autonomy is a dial. Start low, add capability against evidence
-- Optional lab: the `hermes-agent-workshop/` folder in this repo builds a working tool-using email agent end to end in about an hour
+- Optional lab: `handson-lab/` in this repo — seven notebooks that build these ideas by hand, from first calls to an MCP server
 
 > **Notes:** Point to the lab as optional homework. It is self-serve via docs/setup-guide.md and needs only free-tier accounts.
 
@@ -740,7 +740,7 @@ flowchart LR
 - Follow the MCP specification and build one server for a system your team already owns
 - Build a twenty-case eval set for something real this month. It teaches more than any course, including this one
 - Track the field through primary sources — model cards, provider engineering blogs, and papers — rather than social media summaries
-- Optional hands-on lab in this repo: `hermes-agent-workshop/` builds a tool-using email agent from zero in about an hour
+- Hands-on lab in this repo: `handson-lab/` (Workshop 2) — seven notebooks on a free stack; `hermes-agent-workshop/` is the deployed version, an email agent in Docker
 
 > **Notes:** Give the room one concrete assignment: the twenty-case eval set. It is the habit most likely to survive contact with their day job.
 

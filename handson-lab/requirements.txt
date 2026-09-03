@@ -1,13 +1,15 @@
 # Workshop 2 — hands-on lab dependencies (free stack)
+# Version floors below were verified together on 2026-09-03; if a lab breaks after a
+# library release, check this file first — two of these APIs moved under us already.
 openai>=1.40                 # used as the client for OpenRouter AND Ollama (both speak the OpenAI API)
 python-dotenv>=1.0
 requests>=2.31
 beautifulsoup4>=4.12
 tiktoken>=0.7
 pydantic>=2.7
-gradio>=4.44
+gradio>=5                    # Lab 3. Gradio 6 removed ChatInterface(type=...); 4.x is too old
 chromadb>=0.5
 sentence-transformers>=3.0   # local embeddings, no API key
-mcp>=1.2                     # Model Context Protocol server + client (Lab 6)
+mcp>=2,<3                    # Lab 6. SDK 2.0 renamed FastMCP -> MCPServer; 1.x code will not run
 jupyterlab>=4.2
 ipywidgets>=8.1

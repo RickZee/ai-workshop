@@ -420,7 +420,7 @@ flowchart LR
 
 ## Where to go next
 - **Ed Donner's courses** — the full treatment: fine-tuning with QLoRA, the framework tour (Agents SDK, CrewAI, LangGraph), and deployment. Links in the lab README
-- **Workshop 1's `hermes-agent-workshop/`** — the same ideas already running in Docker with a real inbox, if you want the deployed version
+- **`hermes-agent-workshop/`** — the third track in this repo: the same ideas already running in Docker with a real inbox, if you want the deployed version
 - **Build a twenty-case eval set for something real this month.** It teaches more than either workshop
 - Write one MCP server for a system your team already owns. That is the highest-leverage afternoon on this list
 - Track the field through primary sources — provider docs, model cards, engineering blogs
