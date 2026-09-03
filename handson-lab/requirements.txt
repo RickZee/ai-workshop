@@ -1,0 +1,13 @@
+# Workshop 2 — hands-on lab dependencies (free stack)
+openai>=1.40                 # used as the client for OpenRouter AND Ollama (both speak the OpenAI API)
+python-dotenv>=1.0
+requests>=2.31
+beautifulsoup4>=4.12
+tiktoken>=0.7
+pydantic>=2.7
+gradio>=4.44
+chromadb>=0.5
+sentence-transformers>=3.0   # local embeddings, no API key
+mcp>=1.2                     # Model Context Protocol server + client (Lab 6)
+jupyterlab>=4.2
+ipywidgets>=8.1

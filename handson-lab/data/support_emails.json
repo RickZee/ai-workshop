@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "subject": "Password reset link expired again",
+    "body": "Hi - I've requested a reset link three times this morning and each one says expired when I click it. I need access before our 2pm board meeting.",
+    "label_category": "access",
+    "label_urgency": "high",
+    "label_needs_human": false
+  },
+  {
+    "id": 2,
+    "subject": "Invoice 88213 - wrong VAT rate",
+    "body": "Your March invoice charges 20% VAT but we are VAT-exempt under our registration; the certificate is on file with your team. Please reissue.",
+    "label_category": "billing",
+    "label_urgency": "normal",
+    "label_needs_human": true
+  },
+  {
+    "id": 3,
+    "subject": "How do I export a report to CSV?",
+    "body": "Quick one - is there a way to get the weekly usage report as CSV rather than PDF? Not urgent.",
+    "label_category": "how-to",
+    "label_urgency": "low",
+    "label_needs_human": false
+  },
+  {
+    "id": 4,
+    "subject": "PRODUCTION DOWN - api returning 503 for all tenants",
+    "body": "Since roughly 09:40 UTC every call to /v2/events returns 503. This is affecting all of our customers. Please escalate.",
+    "label_category": "outage",
+    "label_urgency": "critical",
+    "label_needs_human": true
+  },
+  {
+    "id": 5,
+    "subject": "Cancel our subscription",
+    "body": "We've decided not to renew when the term ends next month. Please confirm what happens to our stored data.",
+    "label_category": "churn",
+    "label_urgency": "normal",
+    "label_needs_human": true
+  },
+  {
+    "id": 6,
+    "subject": "Feature request: SSO with Okta",
+    "body": "We're rolling out Okta company-wide in Q3 and would need SCIM provisioning too. Is that on the roadmap?",
+    "label_category": "feature-request",
+    "label_urgency": "normal",
+    "label_needs_human": false
+  },
+  {
+    "id": 7,
+    "subject": "Data deletion request under GDPR",
+    "body": "Please delete all personal data associated with j.morris@example.com within the statutory period and confirm in writing.",
+    "label_category": "compliance",
+    "label_urgency": "high",
+    "label_needs_human": true
+  },
+  {
+    "id": 8,
+    "subject": "Getting 429s during batch import",
+    "body": "Our nightly import hits rate limits around 11pm. What's the actual per-minute quota on the growth plan?",
+    "label_category": "how-to",
+    "label_urgency": "normal",
+    "label_needs_human": false
+  },
+  {
+    "id": 9,
+    "subject": "Charged twice this month",
+    "body": "There are two charges of $4,800 on the 3rd. I assume one is a duplicate - please refund.",
+    "label_category": "billing",
+    "label_urgency": "high",
+    "label_needs_human": true
+  },
+  {
+    "id": 10,
+    "subject": "Dashboard graphs are blank in Safari",
+    "body": "Charts render fine in Chrome but are empty in Safari 17. Console shows a CSP error. Screenshot attached.",
+    "label_category": "bug",
+    "label_urgency": "normal",
+    "label_needs_human": false
+  },
+  {
+    "id": 11,
+    "subject": "Thanks!",
+    "body": "Just wanted to say the new audit log view saved us hours during our SOC 2 evidence pull. Nice work.",
+    "label_category": "praise",
+    "label_urgency": "low",
+    "label_needs_human": false
+  },
+  {
+    "id": 12,
+    "subject": "Urgent: contract renewal terms",
+    "body": "Legal needs the updated DPA before we can sign the renewal, and our current term ends Friday. Who can I talk to today?",
+    "label_category": "contract",
+    "label_urgency": "high",
+    "label_needs_human": true
+  }
+]

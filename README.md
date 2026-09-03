@@ -1,3 +1,18 @@
+# AI Workshops
+
+Three tracks, each self-contained:
+
+| Track | Folder | Format | Audience |
+|-------|--------|--------|----------|
+| **1. AI Foundations for Engineers** | `presentation/ai-foundations-for-engineers.*` | Six concept modules, ~60-75 min each | IT/software people new to AI |
+| **2. AI Hands-On Lab** | `handson-lab/` + `presentation/ai-handson-lab.*` | Seven notebooks in four blocks, free stack | Same audience, after track 1 |
+| **3. Hermes Agent Workshop** | `hermes-agent-workshop/` | 60-min build of a deployed email agent | Anyone wanting the deployed version |
+
+Each presentation ships as a markdown presenter guide (bullets + speaker notes) and a matching `.pptx`.
+Workshop 2's project ideas are adapted from [Ed Donner](https://edwarddonner.com)'s Udemy courses — see `handson-lab/README.md` for credits and setup.
+
+---
+
 # Hermes Agent Workshop
 
 60-minute hands-on workshop: build an autonomous AI agent that lives in your inbox — reads emails, reasons about them, and replies using live web search and multimodal tools.
