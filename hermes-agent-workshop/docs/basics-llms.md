@@ -40,21 +40,27 @@ Model: "Email sent successfully."
 
 ## Why Free Models for This Workshop?
 
-`nvidia/nemotron-ultra-253b-v1:free` via [OpenRouter](https://openrouter.ai):
-- 253B parameter model — strong reasoning
+`inclusionai/ling-3.0-flash-fin:free` via [OpenRouter](https://openrouter.ai):
 - Free tier, no credit card
-- Supports tool use
+- Supports tool use — required, or Hermes cannot call anything
 - Good enough for all workshop demos
 
-In production you'd likely use Claude Sonnet for better accuracy and reliability.
+**Free model ids are retired without notice.** Before running the workshop, check
+[openrouter.ai/models?q=free](https://openrouter.ai/models?q=free) and confirm the id below
+still exists and still lists tool use — the previous default in this repo was retired.
+Last verified against the OpenRouter model list on 2026-09-03.
+
+In production you'd use a paid frontier model for better accuracy and reliability.
 
 ## Model Comparison
 
 | Model | Context | Tool Use | Cost |
 |-------|---------|----------|------|
-| [nemotron-ultra-253b](https://openrouter.ai/nvidia/nemotron-ultra-253b-v1:free) (free) | 128k | Yes | Free |
-| [Claude Haiku 4.5](https://openrouter.ai/anthropic/claude-haiku-4-5) | 200k | Yes | ~$1/M tokens |
-| [Claude Sonnet 4.5](https://openrouter.ai/anthropic/claude-sonnet-4-5) | 200k | Excellent | ~$3/M tokens |
+| [ling-3.0-flash-fin](https://openrouter.ai/inclusionai/ling-3.0-flash-fin:free) (free) | 262k | Yes | Free |
+| [inkling-small](https://openrouter.ai/thinkingmachines/inkling-small:free) (free) | 1M | Yes | Free |
+| [Claude Opus 5](https://openrouter.ai/anthropic/claude-opus-5) | 1M | Excellent | ~$5/M in, ~$25/M out |
+
+Prices and ids move — verified against the OpenRouter model list on 2026-09-03.
 
 ## What LLMs Cannot Do (Alone)
 

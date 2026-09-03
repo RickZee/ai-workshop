@@ -18,7 +18,7 @@ load_dotenv(override=True)
 # Override to point the labs at any OpenAI-compatible endpoint (a proxy, a gateway,
 # another provider) without editing this file.
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-MODEL = os.getenv("MODEL", "nvidia/nemotron-ultra-253b-v1:free")
+MODEL = os.getenv("MODEL", "inclusionai/ling-3.0-flash-fin:free")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 

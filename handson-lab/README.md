@@ -65,8 +65,10 @@ cp .env.example .env       # and paste your key into it
 
 Free models come and go — **this is the single most likely reason a lab fails**, and the id
 in an older copy of this repo has already been retired once. Lab 0 has a cell that asks
-OpenRouter which models are free *and* tool-capable right now; run it before the session and
-put one of those in `.env`. Tool support is not optional: Labs 3, 5 and 6 need it.
+OpenRouter which models are free *and* advertise tool support, then a second cell that actually
+fires a tool call. Run both before the session. Catalog listing `"tools"` is not the same as
+emitting a well-formed call — that second cell is the one that matters. Tool support is not
+optional: Labs 3, 5 and 6 need it.
 
 ### 3. Optional — a model on your own laptop
 
@@ -84,8 +86,10 @@ one of the lessons.
 jupyter lab
 ```
 
-Open `notebooks/lab0-first-contact.ipynb` and run the `preflight()` cell. It prints exactly
-what your machine can and cannot reach. **Do this before the workshop, not during it.**
+Open `notebooks/lab0-first-contact.ipynb` and run the `preflight()` cell, the model-list
+cell, and the tool-call cell. Together they tell you what your machine can reach *and*
+whether this model will cooperate in Labs 3, 5 and 6. **Do this before the workshop, not
+during it.**
 
 ---
 
@@ -96,9 +100,10 @@ what your machine can and cannot reach. **Do this before the workshop, not durin
 | `OPENROUTER_API_KEY is not set` | No `.env`, or you started Jupyter before creating it | Create `.env`, restart the kernel |
 | `429` / rate limited | Free tier throttles per minute and per day | Wait a minute; batch fewer cases; switch free model |
 | `404` / model not found | The free model id was retired | Run the model-check cell in Lab 0 and put a current id in `.env` |
-| Model ignores the tools (Labs 3, 5, 6) | Free models vary a lot in tool-use quality | `temperature=0`, sharpen the tool description, or switch to another free model that lists tool support |
+| `403` / "agentic harnesses" | That free id is listed but will not serve chat completions | Pick a different id from the Lab 0 list; `inkling-small` is a known trap |
+| Model ignores the tools (Labs 3, 5, 6) | Catalog "tools" ≠ well-formed calls | Lab 0's tool-call cell catches this. Then `temperature=0`, sharpen the description, or switch model |
 | JSON fails to parse (Labs 1, 2) | The model wrapped it in prose or a fence | That is the lesson — `extract_json()` handles it, and Lab 2 adds validate-and-retry |
-| Lab 4 first run hangs | Downloading the ~90 MB embedding model | One-time; let it finish |
+| Lab 4 first run hangs | Downloading `all-MiniLM-L6-v2` (~90 MB) from huggingface.co; no token needed | One-time; let it finish. A Hugging Face 429 is transient — retry |
 | `ModuleNotFoundError` in a notebook | Jupyter is on a different kernel than your venv | Start `jupyter lab` from the activated venv |
 | Notebook cannot find `shared.py` | You opened it from the wrong directory | Run notebooks from inside `notebooks/` |
 

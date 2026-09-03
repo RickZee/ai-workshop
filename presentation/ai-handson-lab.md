@@ -47,9 +47,10 @@ flowchart TD
 > **Notes:** Leave this up during the setup window so late arrivals can orient themselves without interrupting.
 
 ## Before we start: the preflight check
-- Everyone: activate the venv, `jupyter lab`, open `lab0-first-contact.ipynb`, run the `preflight()` cell
-- It prints what your machine can reach — hosted model, local model, key present or missing
-- Green on the hosted call is all you need. Ollama is optional and only used for comparison
+- Everyone: activate the venv, `jupyter lab`, open `lab0-first-contact.ipynb`, run `preflight()`, the model-list cell, and the tool-call cell
+- `preflight()` prints what your machine can reach — hosted model, local model, key present or missing
+- The tool-call cell is the one that matters for later: catalog listing "tools" is not the same as emitting a well-formed call
+- Green on the hosted call plus `TOOL CALL OK` is all you need. Ollama is optional and only used for comparison
 - If yours fails: the README troubleshooting table covers every failure we have seen. Pair up with someone whose works and keep moving
 - Do not spend twenty minutes on one laptop while the room waits
 

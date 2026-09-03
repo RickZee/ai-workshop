@@ -67,9 +67,11 @@ OpenRouter free tier — no credit card, supports tool use.
 
 | Model | Context | Tool Use | Cost |
 |-------|---------|----------|------|
-| `nvidia/nemotron-ultra-253b-v1:free` | 128k | Yes | Free |
-| `anthropic/claude-haiku-4-5` | 200k | Yes | ~$1/M tokens |
-| `anthropic/claude-sonnet-4-5` | 200k | Excellent | ~$3/M tokens |
+| `inclusionai/ling-3.0-flash-fin:free` | 262k | Yes | Free |
+| `thinkingmachines/inkling-small:free` | 1M | Yes | Free |
+| `anthropic/claude-opus-5` | 1M | Excellent | ~$5/M in, ~$25/M out |
+
+> Check these ids before the session — free ones get retired. Last verified against the OpenRouter model list on 2026-09-03.
 
 **Live demo:** hit OpenRouter directly:
 
@@ -78,7 +80,7 @@ curl https://openrouter.ai/api/v1/chat/completions \
   -H "Authorization: Bearer $OPENROUTER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "nvidia/nemotron-ultra-253b-v1:free",
+    "model": "inclusionai/ling-3.0-flash-fin:free",
     "messages": [{"role":"user","content":"What is an LLM in one sentence?"}]
   }'
 ```
@@ -259,7 +261,7 @@ Run 4–5 scenarios, ~3 min each. Narrate what Hermes is doing while it processe
 
 **Next steps for attendees:**
 1. Fork repo → add your own scenario to `docs/use-cases.md`
-2. Swap the free model for `anthropic/claude-haiku-4-5` for better accuracy
+2. Swap the free model for a paid one (`anthropic/claude-opus-5`, ~$5/M in) for better accuracy
 3. Add [Tavily](https://app.tavily.com) for live web search — one env var
 4. Try the built-in cron: `/cron add "every morning" "summarize my emails from yesterday"`
 

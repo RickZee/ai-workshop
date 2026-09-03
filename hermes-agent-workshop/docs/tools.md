@@ -19,10 +19,12 @@ OPENROUTER_API_KEY=sk-or-...
 ```yaml
 model:
   provider: openrouter
-  default: nvidia/nemotron-ultra-253b-v1:free
+  default: inclusionai/ling-3.0-flash-fin:free
 ```
 
-Browse models at [openrouter.ai/models](https://openrouter.ai/models). Filter "Free" for no-cost options.
+Browse models at [openrouter.ai/models](https://openrouter.ai/models). Filter "Free" for
+no-cost options, and check the model's page lists **tool use** — Hermes needs it. Free ids
+are retired without notice; this one was verified against the OpenRouter model list on 2026-09-03.
 
 ---
 
