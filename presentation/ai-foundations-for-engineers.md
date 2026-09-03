@@ -82,6 +82,23 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 
 > **Notes:** This slide is where the cost model clicks for engineers. The takeaway: put static system material at the front of the prompt and the variable user content at the end, so caching can work.
 
+
+## What a call actually costs you
+
+DIAGRAM: inference-timeline
+
+```mermaid
+flowchart LR
+    IN["Your input: system prompt +<br/>history + documents + question"] --> PRE["PREFILL<br/>encoded once"]
+    PRE --> T1["tok 1"] --> T2["tok 2"] --> T3["tok 3"] --> TN["… tok n"]
+    PRE -.-> A["time to first token<br/>≈ input size"]
+    TN -.-> B["total latency<br/>≈ output size"]
+```
+
+*Two separate budgets. Put stable material first so a cached prefix can be reused; variable material last; the question at the very end.*
+
+> **Notes:** Walk the picture left to right, then ask the room which half their own feature is bound by. Most user-facing features are output-bound; most batch jobs are input-bound.
+
 ## Sampling: temperature, top-p, and determinism
 - The model produces probabilities; the sampler picks a token. Temperature scales how much the sampler respects those probabilities
 - Near 0.0 — always pick the most likely token. Repeatable, flat, best for extraction and classification
@@ -99,6 +116,29 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 - Think of it as L1 cache you refill on every request, not as a database
 
 > **Notes:** The "lost in the middle" effect is the practical point: dumping 200 pages in and hoping is a design smell. Module 3 is the alternative.
+
+
+## What is actually in the window
+
+DIAGRAM: context-window
+
+```mermaid
+flowchart LR
+    subgraph ONE["ONE CALL — assembled by you, every time"]
+        direction LR
+        S["System prompt<br/>persona, policy, format"]
+        H["History<br/>prior turns"]
+        R["Retrieved documents<br/>passages for this question"]
+        T["Tool results<br/>JSON you fed back"]
+        Q["Question"]
+    end
+    ONE --> M2["Model"]
+    M2 -.->|"nothing persists"| ONE
+```
+
+*Edges are used reliably; material buried in the middle is not. Nothing carries over between calls — every "memory" is something your application re-sends or re-retrieves.*
+
+> **Notes:** The dotted return arrow is the point: there is no state on the far side. Ask who has assumed otherwise in a design discussion — most hands go up eventually.
 
 ## What models cannot do alone
 - Read your files, query your database, call your API, send an email, or take any action in the world
@@ -149,6 +189,24 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 
 > **Notes:** Show a before/after of a real prompt if you have one. The delimiters point matters: untagged pasted content is how prompt injection gets in (Module 6).
 
+
+## Prompt layout at a glance
+
+DIAGRAM: prompt-anatomy
+
+```mermaid
+flowchart TD
+    A["Role and scope<br/>who the model acts as, what is out of bounds"] --> B["Task<br/>the single thing to do"]
+    B --> C["Context<br/>retrieved documents, clearly delimited"]
+    C --> D["Rules<br/>constraints, escalation, missing-information behaviour"]
+    D --> E["Output contract<br/>exact shape, with one worked example"]
+    E --> F["The question"]
+```
+
+*Top is stable and cache-friendly; bottom is variable. Treat the whole thing as source code: versioned, reviewed, tested.*
+
+> **Notes:** Ask someone to describe a prompt their team uses today and sort it into these five slots out loud. The missing slot is almost always the output contract.
+
 ## System prompt versus user turn
 - The system prompt carries persistent instructions: persona, policy, format, tool-use rules. It is prepended to every call
 - User turns carry the request. Assistant turns carry prior responses. Tool messages carry tool results
@@ -184,6 +242,24 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 - Design the schema so partial success is expressible — a `confidence` field and a `needs_review` flag are worth more than a heroic prompt
 
 > **Notes:** This is the single most practical slide of Module 2. The model is an untrusted upstream service returning user-controlled data. Treat it exactly that way.
+
+
+## The output contract, as a flow
+
+DIAGRAM: structured-output-flow
+
+```mermaid
+flowchart LR
+    M1["Model reply<br/>text, maybe fenced"] --> P["Parse"] --> V{"Validate<br/>against schema"}
+    V -->|valid| U["Use it — typed, trusted"]
+    V -->|invalid| R["Retry once,<br/>including the validation error"]
+    R --> P
+    R -->|still invalid| H["Escalate:<br/>human or fallback path"]
+```
+
+*Model output is untrusted input. Validate it exactly as you would a third-party API payload.*
+
+> **Notes:** The retry arrow is the part teams skip. Showing the model its own error message recovers a surprising share of failures, and costs one extra call.
 
 ## Multimodality
 - Current frontier models accept images and often audio and documents alongside text
@@ -261,6 +337,29 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 
 > **Notes:** Hammer the diagnostic split: if the answer is wrong, first check whether the right chunk was even retrieved. Teams waste weeks tuning prompts to fix a recall problem.
 
+
+## The RAG pipeline
+
+DIAGRAM: rag-pipeline
+
+```mermaid
+flowchart LR
+    subgraph IDX["INDEX TIME"]
+        direction LR
+        S["Sources"] --> C["Chunk<br/>structure-aware, with metadata"] --> E1["Embed"] --> DB[("Vector index")]
+    end
+    subgraph QRY["QUERY TIME"]
+        direction LR
+        Q["Question"] --> E2["Embed"] --> RET["Retrieve top-k"] --> PR["Prompt + passages"] --> AN["Answer + citations"]
+    end
+    DB -.-> RET
+    PERM["Filter permissions HERE"] --> RET
+```
+
+*Filter at retrieval time — the model must never see what the user may not. When an answer is wrong, check retrieval before you touch the prompt.*
+
+> **Notes:** Trace the wrong-answer debugging path on the picture: start at Retrieve, not at Prompt. That single habit saves weeks.
+
 ## Chunking is where quality is won or lost
 - Chunk too large and you dilute the embedding and waste context; too small and you sever the meaning from its surroundings
 - Common starting point: a few hundred to a thousand tokens with modest overlap, split on natural boundaries — headings, sections, functions
@@ -278,6 +377,22 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 - Measure retrieval separately: recall@k on a labeled question set is the number that predicts end-to-end quality
 
 > **Notes:** Hybrid plus reranking is the highest-leverage upgrade for most first-generation RAG systems. Recommend it as the standard second iteration.
+
+
+## Two retrievers are better than one
+
+DIAGRAM: retrieval-funnel
+
+```mermaid
+flowchart LR
+    V["Vector search<br/>meaning, paraphrase, synonyms"] --> CAND["~50 candidates<br/>cheap, high recall"]
+    K["Keyword / BM25<br/>IDs, error codes, exact names"] --> CAND
+    CAND --> RR["Rerank<br/>cross-encoder"] --> TOP["Top 5 into the prompt"]
+```
+
+*Hybrid plus reranking is the standard second iteration. Measure recall@k before and after — it is the number that predicts end-to-end quality.*
+
+> **Notes:** Worth saying that keyword search is not legacy: in an IT organisation most searches are identifiers, and that is exactly where vectors are weakest.
 
 ## When not to use RAG
 - The corpus is small and stable — just put it in the prompt and use caching
@@ -328,6 +443,28 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 
 > **Notes:** Poor tool descriptions are the most common cause of an agent that "won't use the tool" or uses it constantly. Show a bad and a good description.
 
+
+## The tool-calling handshake
+
+DIAGRAM: tool-call-sequence
+
+```mermaid
+sequenceDiagram
+    participant H as Your host (your code, your credentials)
+    participant M as Model
+    participant T as Tool
+    H->>M: 1. request + tool definitions
+    M->>H: 2. tool call: get_price("Berlin")
+    H->>T: 3. your code executes it
+    T->>H: 4. {"price": 499}
+    H->>M: 5. result appended to messages
+    M->>H: 6. final answer
+```
+
+*The model proposes; your host disposes. That boundary is where permissions, validation, rate limits and audit live.*
+
+> **Notes:** Engineers who are nervous about "the AI doing things" relax at this slide. Point at step 3 and say: that is your code, with your credentials, and you can refuse.
+
 ## Designing a good tool surface
 - Few, well-named, orthogonal tools beat a long menu — models get confused by twenty near-duplicates
 - Make parameters explicit and typed; avoid free-form strings that the model has to guess the format of
@@ -354,6 +491,25 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 - Turn the dial up only as far as your evidence and your blast radius allow
 
 > **Notes:** The dial is the key mental model of this module. Most successful production systems sit far lower on it than the discourse implies.
+
+
+## The agent loop
+
+DIAGRAM: agent-loop
+
+```mermaid
+flowchart LR
+    P["Perceive<br/>input, tool results"] --> R["Reason<br/>what do I know, what next"]
+    R --> A["Act<br/>call a tool"]
+    A --> O["Observe<br/>result back into context"]
+    O --> P
+    R -->|goal met| DONE["Final answer"]
+    O -->|step cap hit| STOP["Stop, loudly"]
+```
+
+*The model supplies reasoning, tools supply perception and action, the loop supplies persistence. Autonomy is a dial — start low and raise it against evidence.*
+
+> **Notes:** Every framework in the ecosystem is a packaging of this loop. Once someone has written it by hand, the framework tour becomes readable rather than magical.
 
 ## Agent patterns worth knowing
 - **ReAct** — interleave reasoning and tool calls. The workhorse; reliable and easy to debug from the trace
@@ -431,6 +587,22 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 
 > **Notes:** Order matters — most teams jump to LLM-as-judge and skip the deterministic layer, which is where most real bugs actually get caught.
 
+
+## Layers of grading
+
+DIAGRAM: eval-layers
+
+```mermaid
+flowchart TD
+    D["Deterministic checks — schema, fields, numbers, citations<br/>every request"] --> R["Reference comparison — exact or semantic match<br/>every build"]
+    R --> J["LLM-as-judge — written rubric, calibrated first<br/>every build"]
+    J --> HU["Human review — a sampled queue<br/>a sample"]
+```
+
+*Cheapest and most frequent at the top. Most teams jump straight to the judge and skip the layer that catches real bugs.*
+
+> **Notes:** Ask which layers their current CI has. Usually none, and the deterministic layer is a two-hour job — that is the recommendation to leave them with.
+
 ## LLM-as-judge, done carefully
 - Write a rubric with concrete criteria and a small scale. "Rate 1–10 for quality" produces noise
 - Calibrate the judge against human labels on a subset before you trust it. If it disagrees with your reviewers, fix the rubric
@@ -497,6 +669,26 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 - Instruction-only defenses help but do not solve it. Assume injection will land and design so it does not matter
 
 > **Notes:** This is the most important slide in Module 6. Give it real time. If the room takes one security idea away, it is that content is instructions.
+
+
+## How an injection reaches an action
+
+DIAGRAM: injection-path
+
+```mermaid
+flowchart LR
+    U["Untrusted content<br/>email, web page, PDF, ticket, code comment"] --> CTX["Your context window<br/>instructions and data are the same tokens"]
+    CTX --> AG["Agent with credentials<br/>holds tools that can act"]
+    AG --> ACT["Action<br/>money moved, data sent, access granted"]
+    C1["Least privilege"] -.-> AG
+    C2["Separate trust zones"] -.-> CTX
+    C3["Human approval"] -.-> ACT
+    C4["Bounded outputs"] -.-> ACT
+```
+
+*Assume injection lands. Design so that when it does, nothing important is reachable.*
+
+> **Notes:** Give this picture real time. The dotted lines are the only part that is under your control — the solid path is inherent to how the model reads text.
 
 ## Designing against injection
 - Least privilege per tool and per session — the agent should hold only the permissions its current task needs

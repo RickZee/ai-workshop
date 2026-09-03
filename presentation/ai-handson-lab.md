@@ -18,7 +18,7 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 
 ---
 
-# SESSION 1 — Warm-Up: First Calls and the Brochure Generator
+# SESSION 1 — Warm-Up: First Calls and Brochures
 
 ## How today runs
 - Seven notebooks with TODO cells. You write the code; the solutions folder is there when you are stuck, not before
@@ -28,6 +28,23 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 - Ask out loud. If two pairs hit the same wall we stop and cover it together
 
 > **Notes:** Set the tone in the first 60 seconds: this is a workshop, not a demo. Say explicitly that you *want* failures in the room, because every one of them maps to a slide from Workshop 1.
+
+
+## The shape of the day
+
+DIAGRAM: day-plan
+
+```mermaid
+flowchart TD
+    B1["BLOCK 1 · Labs 0-1 · 75 min<br/>First calls, then the brochure generator"] --> B2["BLOCK 2 · Labs 2-3 · 100 min<br/>Schemas, an eval harness, tool calling"]
+    B2 --> B3["BLOCK 3 · Lab 4 · 60 min<br/>RAG over our own docs, measured"]
+    B3 --> B4["BLOCK 4 · Labs 5-6 · 105 min<br/>The agent loop by hand, then MCP"]
+    B4 --> CAP["CAPSTONE · 90 min<br/>Pick one, ship it badly, measure it"]
+```
+
+*Preflight check before we start — not during Lab 0.*
+
+> **Notes:** Leave this up during the setup window so late arrivals can orient themselves without interrupting.
 
 ## Before we start: the preflight check
 - Everyone: activate the venv, `jupyter lab`, open `lab0-first-contact.ipynb`, run the `preflight()` cell
@@ -74,6 +91,21 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 
 > **Notes:** This is the first "real" program of the day and it lands well. Have a company in mind whose site you have already tested, in case a chosen site blocks scrapers.
 
+
+## Lab 1 at a glance
+
+DIAGRAM: chain-brochure
+
+```mermaid
+flowchart LR
+    F1["Fetch landing page<br/>your code"] --> P1["Model picks the links<br/>returns JSON"]
+    P1 --> F2["Fetch those pages<br/>your code"] --> P2["Model writes the brochure<br/>grounded in the text"]
+```
+
+*Your code fetches, validates and retries. The model judges and writes. That split is what makes the chained version beat the one-shot one.*
+
+> **Notes:** Draw the comparison explicitly at the end of the lab: the one-shot version sees only the landing page, and it shows.
+
 ## The two prompts, and why they differ
 - **Link picking is extraction** — temperature 0, show the exact JSON shape, say what to exclude, parse and validate the result
 - **Brochure writing is generation** — some temperature, a persona, a structure, a length limit, and a grounding rule
@@ -103,7 +135,7 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 
 ---
 
-# SESSION 2 — Making It Reliable: Schemas, Evals, and Tools
+# SESSION 2 — Reliability: Schemas, Evals, Tools
 
 ## Lab 2 — Structured output and a real eval
 - The step that separates a demo from a system, and the one most tutorials skip
@@ -122,6 +154,24 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 - Design so partial success is expressible: `confidence` and `needs_human` are worth more than any prompt trick
 
 > **Notes:** The `needs_human` field is where the room's compliance-minded people lean in. A system that can say "I am not sure" is one you can actually deploy in a regulated environment.
+
+
+## Validate, retry, escalate
+
+DIAGRAM: structured-output-flow
+
+```mermaid
+flowchart LR
+    M1["Model reply"] --> P["Parse"] --> V{"Validate<br/>pydantic"}
+    V -->|valid| U["Use it"]
+    V -->|invalid| R["Retry once with the error text"]
+    R --> P
+    R -->|still invalid| H["needs_human = true"]
+```
+
+*This is the loop you implement in Lab 2's `triage()` function — and the reason the harness reports a retry count alongside accuracy.*
+
+> **Notes:** Tie the picture to the notebook cell before they start; the pairs that see the shape first finish the TODO in half the time.
 
 ## The harness: three boring numbers
 - **Schema-valid rate** — did it parse and validate? Deterministic, cheap, run it on everything
@@ -159,6 +209,28 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 
 > **Notes:** The exercise that teaches this fastest is the stretch goal where they vaguen a tool description and watch the model misuse it. Push a fast pair to try it and report back.
 
+
+## The handshake, step by step
+
+DIAGRAM: tool-call-sequence
+
+```mermaid
+sequenceDiagram
+    participant H as Your notebook
+    participant M as Model
+    participant T as get_ticket_price()
+    H->>M: 1. messages + TOOLS
+    M->>H: 2. tool_calls: get_ticket_price("Berlin")
+    H->>T: 3. TOOL_IMPL[name](**args)
+    T->>H: 4. {"price_usd": 499}
+    H->>M: 5. role "tool" message appended
+    M->>H: 6. final answer for the user
+```
+
+*Steps 3 and 4 are your code. If a model asks for something it should not have, this is where you say no.*
+
+> **Notes:** The loop in the notebook runs steps 1-5 up to five times — say so, or the step cap in the solution looks arbitrary.
+
 ## Where free models wobble
 - Tool-use quality varies enormously between models — far more than chat quality does
 - Symptoms: ignoring the tools entirely, malformed arguments, calling the same tool forever
@@ -179,7 +251,7 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 
 ---
 
-# SESSION 3 — Grounding: Retrieval That Actually Works
+# SESSION 3 — Grounding: Retrieval That Works
 
 ## Lab 4 — A knowledge worker over our own docs
 - Ed's Week 5 project, rebuilt with **local embeddings** — no API cost, and the retrieval half never leaves your laptop
@@ -198,6 +270,28 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 - The most instructive experiment of the day: re-index at 200 chars and at 6000, and watch recall move
 
 > **Notes:** Make sure at least two pairs do the 200/6000 experiment and report their numbers to the room. Seeing recall collapse in both directions is better than any explanation of chunk-size trade-offs.
+
+
+## Lab 4 at a glance
+
+DIAGRAM: rag-pipeline
+
+```mermaid
+flowchart LR
+    subgraph IDX["INDEX TIME — once"]
+        direction LR
+        S["Repo markdown"] --> C["chunk_markdown()<br/>split on headings"] --> E1["all-MiniLM-L6-v2"] --> DB[("Chroma")]
+    end
+    subgraph QRY["QUERY TIME — every question"]
+        direction LR
+        Q["Question"] --> E2["Same embedder"] --> RET["retrieve(k)"] --> PR["Grounded prompt"] --> AN["Answer + citations"]
+    end
+    DB -.-> RET
+```
+
+*Same embedder on both sides — swap it and the index becomes silently meaningless. `recall_at_k` measures the middle of this picture, on its own.*
+
+> **Notes:** Point at the dotted line when you explain why recall@k is measured separately: everything downstream of it is capped by it.
 
 ## Two rules that prevent real incidents
 - **The same embedding model must index and query.** Swap it and your index becomes silently meaningless — no error, just bad answers
@@ -248,6 +342,25 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 
 > **Notes:** Ask who has seen "silent success" already today — hands go up from Lab 3. It lands much harder as a shared observation than as a warning.
 
+
+## The guarded loop
+
+DIAGRAM: agent-loop-guarded
+
+```mermaid
+flowchart LR
+    P["Perceive"] --> R["Reason"] --> A["Act"] --> O["Observe"] --> P
+    R -->|goal met| DONE["Final answer"]
+    G1["Step cap"] -.-> P
+    G2["Repeat detection"] -.-> A
+    G3["Approval gate"] -.-> A
+    G4["Trace log"] -.-> O
+```
+
+*The loop is fifteen lines. Everything else in Lab 5 is a guardrail wrapped around it.*
+
+> **Notes:** Ask which guard they would add first for their own systems. The answer is almost always the approval gate, and that is the right instinct.
+
 ## Make it fail on purpose
 - Ask for something the repository does not contain. Does it admit the gap or invent one?
 - Cap it at three steps on a task needing ten. Does it fail loudly, or claim success?
@@ -274,6 +387,27 @@ Presenter rule for the whole day: **let things fail in front of the room.** A fr
 - That turns "we should do something with AI" into an ordinary integration backlog
 
 > **Notes:** This is the slide to leave up during the capstone. Several people will choose Option C, and this is the pitch they will make to their own manager next week.
+
+
+## Write once, use anywhere
+
+DIAGRAM: mcp-hub
+
+```mermaid
+flowchart LR
+    A1["Your agent loop"] <--> MCP(("MCP"))
+    A2["Claude Desktop"] <--> MCP
+    A3["Hermes / your app"] <--> MCP
+    A4["A teammate's tool"] <--> MCP
+    MCP <--> S1["Ticketing"]
+    MCP <--> S2["Monitoring"]
+    MCP <--> S3["Wiki / docs"]
+    MCP <--> S4["Deploy history"]
+```
+
+*One server per internal system, written once. Treat each as a production service: authentication, least privilege, rate limits, logging.*
+
+> **Notes:** This is the slide people photograph. It is also the pitch they will make to their own manager — leave it up during the capstone.
 
 ## The capstone
 - **Option A — inbox triage** a human would trust: Labs 2 and 3 combined, with an override rate you can quote
