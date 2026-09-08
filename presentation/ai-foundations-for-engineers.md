@@ -783,6 +783,24 @@ flowchart TB
 
 > **Notes:** This sharpens the "lost in the middle" line from Module 1 into something testable. The demo that lands: run their working prompt, then re-run it with 50k tokens of irrelevant filler in front, and show the same question now failing.
 
+## What context rot looks like
+
+DIAGRAM: context-rot-curve
+
+```mermaid
+flowchart LR
+    A["~2k tokens<br/>focused prompt<br/><b>best accuracy</b>"] --> B["~32k tokens<br/>still fine when the question<br/>shares the answer's wording"]
+    B --> C["~128k tokens<br/>low-similarity questions<br/>fall off first"]
+    C --> D["1M tokens<br/>distractors compound<br/><b>worst accuracy</b>"]
+    E["+1 distractor"] -.->|"hurts"| C
+    F["+several distractors"] -.->|"compounds"| D
+    G["shuffled haystack"] -.->|"scored better than coherent"| B
+```
+
+*Task difficulty held constant; only input length changed. The shape of the finding, not a benchmark — and your evals inherit it: a case that passes at 2k can fail at 100k in the same system.*
+
+> **Notes:** Two things to say out loud: the decline is not a cliff, it is a slope, so nobody notices it in a demo; and the shuffled-haystack result means the model is not reading your document the way you are.
+
 ## Model layer — caching and token economics
 - Prompt caching only pays on an exact, unchanged prefix. A timestamp, a session id, or a reordered tool list at the top invalidates everything after it
 - Cache *writes* cost more than ordinary tokens on most providers. Low-reuse prefixes make the bill worse, not better
@@ -828,6 +846,25 @@ flowchart TB
 
 > **Notes:** In OpenRouter specifically, fallbacks are on by default, traffic is weighted by the inverse square of price, setting an explicit sort or order disables load balancing entirely, and `require_parameters` defaults to false — so a provider that does not support your parameter accepts the request and ignores it. Read your gateway's routing page the way you would read a load balancer's config.
 
+## One model id, several machines
+
+DIAGRAM: router-fanout
+
+```mermaid
+flowchart LR
+    Q["Your call<br/>model: mistral-7b:free"] --> R{{"Router"}}
+    R -->|"cheapest — wins price-weighted routing"| P1["Provider A<br/>fp8 · 8k context · cheapest"]
+    R -->|"fallback on error"| P2["Provider B<br/>int8 · 32k context"]
+    R -->|"rarely selected"| P3["Provider C<br/>fp16 · 128k context · fastest"]
+    P1 --> L["What you must log<br/>provider · model · quantization · latency"]
+    P2 --> L
+    P3 --> L
+```
+
+*The same id, three different machines. The unit of reproducibility is provider plus quantization — not the model name.*
+
+> **Notes:** Ask the room what their code logs today. Almost always the model id and nothing else, which means every one of these branches looks identical in their traces.
+
 ## Router layer — free-tier realities
 - Rate limits bite before quality does: roughly 20 requests per minute on free variants, 50 requests per day under $10 of lifetime credits, ~1,000 above it
 - A negative account balance blocks *free* models too — the surprise that ends a workshop five minutes in
@@ -847,13 +884,22 @@ flowchart TB
 > **Notes:** The cache slide is the one to linger on for regulated teams — a semantic cache is a data-leak surface as well as a correctness surface, because a near-hit can return another tenant's answer.
 
 ## Which layer is my bug in?
-- **Pin the router** — fix provider, model version, and quantization, then re-run. If the behaviour changes, it was never your prompt
-- **Replay the transcript** — if the model's outputs look right but the action was wrong, it is the agent loop or the tool, not the model
-- **Shrink the context** — if a smaller, focused prompt succeeds where the full one failed, it is context rot, not capability
-- **Return a deliberate empty payload** from one tool — if nothing anywhere notices, you have a silent-failure bug regardless of what else is broken
-- **Check the boring things first**: quota, balance, a retired model id, a changed tool schema. In that order
 
-> **Notes:** This is the slide to photograph. Suggest they paste it into their runbook as-is — it is a triage tree, not a lecture.
+DIAGRAM: layer-triage
+
+```mermaid
+flowchart TB
+    T1["Pin provider, model version and quantization — re-run"] -->|"behaviour changes"| R1["ROUTER LAYER"]
+    T1 -->|"same behaviour"| T2["Replay the exact transcript"]
+    T2 -->|"model output fine, action wrong"| R2["AGENT LAYER"]
+    T2 -->|"model output itself is wrong"| T3["Shrink to a focused prompt"]
+    T3 -->|"now it succeeds"| R3["MODEL LAYER — context rot"]
+    T3 -->|"still fails"| R4["Check the boring things<br/>quota · balance · retired model id · changed tool schema"]
+```
+
+*Top-down, cheapest test first. Each test isolates one layer, so you stop guessing after three runs.*
+
+> **Notes:** This is the slide to photograph — suggest they paste it into their runbook as-is. Walk the tree with a real bug from the room if anyone offers one. The value is the order: most teams start at the bottom, rewriting the prompt, which is the most expensive test and the least likely cause.
 
 ## Make it fail on purpose
 - Run one prompt twenty times at `temperature=0` and diff the outputs. Count how many are unique
