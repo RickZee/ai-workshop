@@ -4,7 +4,7 @@ Three tracks, each self-contained:
 
 | Track | Folder | Format | Audience |
 |-------|--------|--------|----------|
-| **1. AI Foundations for Engineers** | `presentation/ai-foundations-for-engineers.*` | Six concept modules, ~60-75 min each | IT/software people new to AI |
+| **1. AI Foundations for Engineers** | `presentation/ai-foundations-for-engineers.*` | Seven concept modules (six core + a gotchas clinic), ~60-75 min each | IT/software people new to AI |
 | **2. AI Hands-On Lab** | `handson-lab/` + `presentation/ai-handson-lab.*` | Seven notebooks in four blocks, free stack | Same audience, after track 1 |
 | **3. Hermes Agent Workshop** | `hermes-agent-workshop/` | 60-min build of a deployed email agent | Anyone wanting the deployed version |
 

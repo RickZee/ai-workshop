@@ -4,7 +4,7 @@
 
 Audience: engineers, SREs, QA, architects, and technical leads who can read code and reason about systems, but have not built with LLMs. No ML background assumed. No math beyond intuition.
 
-Format: six modules, ~60–75 minutes each. Run them weekly, or pair two per half-day. Each module ends with a "so what" slide and a discussion prompt. Concepts only — the hands-on lab (`handson-lab/`, Workshop 2) is the companion course, best run after Module 4.
+Format: seven modules, ~60–75 minutes each (Module 7 is a shorter ~45-minute clinic). Run them weekly, or pair two per half-day. Each module ends with a "so what" slide and a discussion prompt. Concepts only — the hands-on lab (`handson-lab/`, Workshop 2) is the companion course, best run after Module 4.
 
 | # | Module | Core question |
 |---|--------|---------------|
@@ -14,6 +14,7 @@ Format: six modules, ~60–75 minutes each. Run them weekly, or pair two per hal
 | 4 | Tools and Agents | How does it *do* things? |
 | 5 | Evaluation and Reliability | How do I know it works? |
 | 6 | Production, Security, and Cost | How do I ship it without regret? |
+| 7 | Gotchas by Layer: Model, Agent, Router | Which layer is my bug actually in? |
 
 Model names, prices, and benchmark numbers move fast. Treat every specific figure in this deck as an example of an order of magnitude, not a current quote — check the vendor's pricing page on the day you need the number.
 
@@ -22,7 +23,7 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 # SESSION 1 — How Language Models Actually Work
 
 ## Where we're going
-- Six modules: mechanics, prompting, grounding, agents, evaluation, production
+- Six modules: mechanics, prompting, grounding, agents, evaluation, production — plus a closing gotchas clinic
 - Every module is concepts first — you leave able to reason about the system, not just call an API
 - The goal is to remove magic. By the end you should be able to predict what will fail and why
 - You already have the hard skills. This is a new component with unusual failure modes, not a new career
@@ -734,6 +735,145 @@ flowchart LR
 - Expect the pilot to succeed and the rollout to be about change management, permissions, and data quality, not modeling
 
 > **Notes:** The last bullet is the honest one. The technical part is rarely what stalls these programs.
+
+---
+
+# SESSION 7 — Gotchas by Layer: Model, Agent, Router
+
+## Why this module exists
+- Every LLM system has three layers, and a bug in one of them looks exactly like a bug in the other two
+- The model layer fails **statistically**, the agent layer fails **procedurally**, the router layer fails **operationally**
+- Teams lose days tuning a prompt when the real change was a router silently switching providers overnight
+- This module is a checklist: the failure, the symptom you will actually see, and the cheap test that tells you which layer you are in
+- Nothing here is exotic. All of it is boring, reproducible, and most of it will happen in your first month
+
+> **Notes:** Frame this as the module you run *after* the room has built something, or as a pre-mortem before they do. Ask up front how many of them know what sits between their code and the model weights — usually nobody has named the router layer out loud.
+
+## The three layers, and where the bug actually lives
+
+DIAGRAM: three-layers
+
+```mermaid
+flowchart TB
+    A["Your application"] --> R["ROUTER LAYER<br/>gateway, model picker, semantic cache, fallbacks<br/><i>fails operationally — silently</i>"]
+    R --> AG["AGENT LAYER<br/>loop, tools, memory, MCP servers<br/><i>fails procedurally — visibly, then quietly</i>"]
+    AG --> M["MODEL LAYER<br/>tokenizer, context, sampling, decoding<br/><i>fails statistically — always a little</i>"]
+    M -.->|"same symptom: 'the answer got worse'"| A
+```
+
+*One symptom, three possible causes. Debug top-down: pin the router first, then replay the agent transcript, then shrink the context.*
+
+> **Notes:** The dotted arrow is the whole slide. "The answer got worse this week" is the single most common bug report, and it is unactionable until you know which layer moved.
+
+## Model layer — the determinism you do not have
+- `temperature=0` is greedy decoding, not reproducible output. Same request, same weights, different answer
+- The usual cause is not the sampler: your request shares a GPU batch with other people's, and floating-point reduction order changes with batch size
+- Consequence: you cannot pin behaviour with temperature alone, and you cannot golden-file model output
+- Provider-side model updates, quantization changes and staged rollouts move it further, often with no version string you can see
+- What to do: pin model *versions* where offered, assert on properties and distributions, and treat any exact-match assertion as flaky by construction
+
+> **Notes:** The readable primary source is Thinking Machines Lab's "Defeating Nondeterminism in LLM Inference" — the fix is batch-invariant kernels, which almost nobody is running. Callback to Module 1: this is the "sampled" property biting at the infrastructure level, not the API level.
+
+## Model layer — context rot
+- Chroma's 2025 study held task difficulty constant and varied only input length across 18 leading models. Accuracy fell as the window filled
+- Degradation is uneven: it is worst when the question and the answer share little vocabulary — exactly the real-world case
+- One distractor hurts. Several compound. Certain distractors get hallucinated back far more often than others
+- Counter-intuitive result: models scored *better* on shuffled haystacks than on coherently ordered ones. Structure is not free
+- The rule: a large context window is a budget, not a feature. Retrieve less, place it deliberately, and measure at your real input length — not at 2k tokens
+
+> **Notes:** This sharpens the "lost in the middle" line from Module 1 into something testable. The demo that lands: run their working prompt, then re-run it with 50k tokens of irrelevant filler in front, and show the same question now failing.
+
+## Model layer — caching and token economics
+- Prompt caching only pays on an exact, unchanged prefix. A timestamp, a session id, or a reordered tool list at the top invalidates everything after it
+- Cache *writes* cost more than ordinary tokens on most providers. Low-reuse prefixes make the bill worse, not better
+- Minimum cacheable prefix lengths and short TTLs mean small prompts and low-traffic features never hit at all
+- Tokenizers are not uniform: code, JSON and non-English text inflate the same information. Budget by measured tokens, never by word count
+- Numbers tokenize arbitrarily — which is why in-model arithmetic is unreliable. Give it a calculator tool and stop arguing with it
+
+> **Notes:** Ask whether anyone's system prompt starts with the current date. Hands go up, and that is a cache hit rate of zero on an otherwise perfect prefix.
+
+## Model layer — structured output that validates and is still wrong
+- Four layers of failure: syntax (JSON mode solves it), schema compliance (constrained decoding mostly solves it), semantic validity, and distribution shift
+- Semantic invalidity survives every validator you have: `end_date` before `start_date`; a confidence of `0.97` next to reasoning that says "uncertain"
+- Constrained decoding forces the model off its preferred tokens. The JSON gets prettier while quality on hard reasoning can drop
+- Generation order matters more than your struct's field order — ask for reasoning *before* the conclusion, or the conclusion is unconditioned
+- Add a semantic validation layer with domain rules, and monitor enum and numeric distributions in production. The long tail only shows up on real traffic
+
+> **Notes:** This is Module 2's structured-output slide with the production tail attached. The line that sticks: "schema-valid is a spellcheck, not a fact check."
+
+## Agent layer — the failures you can put a number on
+- Module 4 named the failure modes; this is how you catch them. Tool calling fails somewhere in the **3–15%** range in production, depending on model and task complexity
+- Schema violations, hallucinated tool names, and missing required fields are the loud ones — validate arguments before dispatch and they become logs, not incidents
+- **Silent tool failure is the expensive one**: HTTP 200 with an empty or malformed payload, and the agent proceeds confidently on nothing
+- Long sessions push tool definitions out of effective attention: the agent starts making redundant or contradictory calls with no error anywhere
+- Multi-agent pipelines collapse at the seam — agents that are individually fine propagate one hallucinated assertion as ground truth downstream
+
+> **Notes:** Make tool-call success rate a first-class metric on the board next to latency and cost. Teams instrument the model and never instrument the tools, which is where most of the real failure lives.
+
+## Agent layer — MCP-specific gotchas
+- **Tool poisoning** — instructions hidden in a tool *description* or parameter schema. The model reads it; your reviewer never did
+- **Rug pull** — a server changes its tool definitions after you approved them. Pin definitions by hash and alert on schema change
+- **Confused deputy** — the server acts with its own broad privileges, not the requesting user's. Bind sessions to user identity and check on every request
+- **Token passthrough and over-scoped OAuth** — one shared, long-lived, `full_access` token across servers is an aggregation risk. Per-server, narrow, short-lived
+- **Supply chain** — MCP servers are dependencies installed from public registries. Review the source, pin versions, watch for typosquats
+
+> **Notes:** OWASP now publishes an MCP Security Cheat Sheet — point security-minded attendees at it directly. The framing that works with an appsec audience: this is package management plus a confused deputy, both of which they already know how to reason about.
+
+## Router layer — you have one, whether you named it or not
+- A router is anything between your code and the weights: OpenRouter, LiteLLM, Bedrock or Vertex, a semantic cache, or the model-picker someone wrote in an afternoon
+- It fails *silently by design* — its job is to hide provider failures from you, which also hides them from your debugging
+- The same model id can be served by several providers at different quantization, context length, and speed. **The model name is not the unit of reproducibility; provider plus quantization is**
+- Defaults that surprise people: automatic failover to another provider, load balancing weighted by price, and unsupported parameters accepted and quietly ignored
+- Minimum viable fix: log the resolved provider, model, and quantization on every single call, and alert when the mix shifts
+
+> **Notes:** In OpenRouter specifically, fallbacks are on by default, traffic is weighted by the inverse square of price, setting an explicit sort or order disables load balancing entirely, and `require_parameters` defaults to false — so a provider that does not support your parameter accepts the request and ignores it. Read your gateway's routing page the way you would read a load balancer's config.
+
+## Router layer — free-tier realities
+- Rate limits bite before quality does: roughly 20 requests per minute on free variants, 50 requests per day under $10 of lifetime credits, ~1,000 above it
+- A negative account balance blocks *free* models too — the surprise that ends a workshop five minutes in
+- "Supports tools" in a catalog is a claim, not a guarantee. Expect `No endpoints found that support tool use` from a model the list says is tool-capable
+- Free model ids are retired without notice, and meta-routes like `:free` aggregates vary in model and style call to call
+- Free and anonymous routes may log prompts and outputs. Never put client, patient, or federal data through one
+
+> **Notes:** This is exactly what Lab 0's model-list and tool-call cells exist to catch. Run them the morning of any session; the free list rotates faster than the deck does.
+
+## Router layer — the general failure modes
+- **Misroute** — brittle keyword or length rules send a hard question to a small model. Short questions can be the hardest ones
+- **Semantic cache false hits** — "what's my balance" and "what's my transaction history" score as similar and return each other's answer. Cache hits are correctness bugs when the threshold is wrong
+- **Router latency eats the savings** — three lookups on the hot path to save a fraction of a cent moves the bottleneck instead of fixing it
+- **Classifier drift** — a router calibrated on FAQ traffic degrades when the traffic becomes open-ended. Nothing retrains itself
+- **Retry storms** — retrying a content-filter rejection is guaranteed to fail again; ignoring `Retry-After` hammers a rate-limited provider. Circuit breakers, not loops
+
+> **Notes:** The cache slide is the one to linger on for regulated teams — a semantic cache is a data-leak surface as well as a correctness surface, because a near-hit can return another tenant's answer.
+
+## Which layer is my bug in?
+- **Pin the router** — fix provider, model version, and quantization, then re-run. If the behaviour changes, it was never your prompt
+- **Replay the transcript** — if the model's outputs look right but the action was wrong, it is the agent loop or the tool, not the model
+- **Shrink the context** — if a smaller, focused prompt succeeds where the full one failed, it is context rot, not capability
+- **Return a deliberate empty payload** from one tool — if nothing anywhere notices, you have a silent-failure bug regardless of what else is broken
+- **Check the boring things first**: quota, balance, a retired model id, a changed tool schema. In that order
+
+> **Notes:** This is the slide to photograph. Suggest they paste it into their runbook as-is — it is a triage tree, not a lecture.
+
+## Make it fail on purpose
+- Run one prompt twenty times at `temperature=0` and diff the outputs. Count how many are unique
+- Prepend 50k tokens of irrelevant filler to a working prompt and re-measure accuracy at your real input length
+- Put a timestamp at the top of your system prompt and watch cached-token cost go to zero
+- Point at a free model the catalog says supports tools, and see whether it emits a well-formed call
+- Have one tool return HTTP 200 with `{}` and find out how far the agent gets before anyone notices
+
+> **Notes:** Assign one of these per pair and take five minutes of report-backs. The empty-payload exercise produces the most uncomfortable silence, which is the point.
+
+## Module 7 takeaways
+- Three layers, three failure grammars: statistical, procedural, operational — name the layer before you fix anything
+- The model layer is never fully deterministic, and long context is a budget you can overspend
+- The agent layer's worst failure is the one that returns 200 and reports success
+- The router layer is invisible by design; log the resolved provider and quantization or you are debugging blind
+- Every item on this list has a five-minute test. Run the tests before production runs them for you
+
+> **Notes:** Close by connecting back to Module 5: every gotcha in this module is a candidate eval case. The point of naming them is that they become tests, not war stories.
+
+---
 
 ## Where to go deeper
 - Read your provider's documentation on tool use, structured output, caching, and long context — it is the highest-value reading available

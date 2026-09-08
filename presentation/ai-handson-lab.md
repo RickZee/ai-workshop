@@ -65,6 +65,15 @@ flowchart TD
 
 > **Notes:** Credit Ed explicitly here, out loud. People who like today's material should be pointed at the full courses; several of them will take one.
 
+## The router is a layer, not a URL
+- OpenRouter is not a model. It is a **router**: it picks a provider for the model id you asked for, and hides the failures of the one it picked
+- The same model id can be served by several providers at different quantization, context length and speed — so the model name is not the unit of reproducibility
+- By default it falls back to another provider when one errors, and it accepts parameters a provider does not support and quietly ignores them
+- That is excellent for a workshop and dangerous for a benchmark: two identical calls can be served by two different machines
+- Rule for today: when a result surprises you, check what actually served it before you touch the prompt
+
+> **Notes:** This is the layer nobody teaches and everybody runs. Say out loud that Bedrock, Vertex, LiteLLM and any internal model-picker behave the same way. It takes thirty seconds and saves someone a week later in the year.
+
 ## Lab 0 — First contact
 - A chat call is: a list of messages, a model name, a temperature. That is the entire interface
 - `shared.py` wraps it in about ten lines. Open it — it is the only "framework" in this workshop
@@ -240,6 +249,15 @@ sequenceDiagram
 - In production you would measure tool-call success rate as a first-class metric
 
 > **Notes:** Have a known-good free model name ready on the board, and check it the morning of the workshop — the free list rotates.
+
+## Router gotchas, in the order you will hit them
+- **Quota, not quality** — roughly 20 requests per minute on free variants, and 50 per day until an account has $10 of lifetime credits (~1,000 after). A negative balance blocks free models too
+- **"Supports tools" is a claim** — the catalog flag is metadata, not a test. `No endpoints found that support tool use` on a tool-capable model is a routing answer, not your bug
+- **Model ids retire without notice** — Lab 0's model-list cell exists for exactly this. Check it the morning you run, not the week before
+- **Silent provider swap** — same id, different provider, different quantization, different answer. Log what served the call
+- **Free routes may log your prompts** — nothing from a client, a patient record, or a federal system goes through a free tier today or ever
+
+> **Notes:** Map each of these to a layer out loud: quota and provider swap are the router, malformed tool calls are the model, the loop that keeps retrying is your code. That triage habit is worth more than any single fix on this slide.
 
 ## Block 2 debrief
 - Did your v2 prompt beat the baseline? By how much, and on which metric?
