@@ -23,7 +23,7 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 # SESSION 1 — How Language Models Actually Work
 
 ## Where we're going
-- Six modules: mechanics, prompting, grounding, agents, evaluation, production — plus a closing gotchas clinic
+- Seven modules: mechanics, prompting, grounding, agents, evaluation, production, and a closing gotchas clinic
 - Every module is concepts first — you leave able to reason about the system, not just call an API
 - The goal is to remove magic. By the end you should be able to predict what will fail and why
 - You already have the hard skills. This is a new component with unusual failure modes, not a new career
@@ -36,7 +36,7 @@ Model names, prices, and benchmark numbers move fast. Treat every specific figur
 - It is stateless. Each call is a pure function of the input; the "conversation" is you resending history every time
 - It is non-deterministic by default, because we sample from that distribution
 
-> **Notes:** Write the four properties on a whiteboard and keep them there all six sessions: next-token predictor, stateless, sampled, priced per token. Nearly every surprising behavior traces back to one of these.
+> **Notes:** Write the four properties on a whiteboard and keep them there all seven sessions: next-token predictor, stateless, sampled, priced per token. Nearly every surprising behavior traces back to one of these.
 
 ## Tokens: the unit of everything
 - Text is split into subword chunks by a tokenizer — roughly 1 token ≈ 0.75 English words
